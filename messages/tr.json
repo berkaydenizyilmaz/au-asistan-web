@@ -35,5 +35,22 @@
       "authCallbackFailed": "Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.",
       "unknown": "Bir hata oluştu. Lütfen tekrar deneyin."
     }
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "meals": "Yemek Listesi",
+    "calendar": "Akademik Takvim",
+    "announcements": "Duyurular",
+    "events": "Etkinlikler",
+    "settings": "Ayarlar",
+    "newChat": "Yeni Sohbet",
+    "chatHistory": "Sohbet Geçmişi",
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "logout": "Çıkış Yap",
+    "darkMode": "Koyu Mod",
+    "lightMode": "Açık Mod",
+    "notifications": "Bildirimler",
+    "toggleSidebar": "Kenar Çubuğunu Aç/Kapat"
   }
 }

@@ -35,5 +35,22 @@
       "authCallbackFailed": "An error occurred during sign in. Please try again.",
       "unknown": "An error occurred. Please try again."
     }
+  },
+  "nav": {
+    "home": "Home",
+    "meals": "Meals",
+    "calendar": "Academic Calendar",
+    "announcements": "Announcements",
+    "events": "Events",
+    "settings": "Settings",
+    "newChat": "New Chat",
+    "chatHistory": "Chat History",
+    "login": "Sign In",
+    "register": "Sign Up",
+    "logout": "Sign Out",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "notifications": "Notifications",
+    "toggleSidebar": "Toggle Sidebar"
   }
 }
