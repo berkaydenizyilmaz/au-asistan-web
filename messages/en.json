@@ -5,5 +5,35 @@
   },
   "home": {
     "title": "Amasya University Assistant"
+  },
+  "auth": {
+    "loginTitle": "Sign In",
+    "loginDescription": "Sign in to AU Assistant to access chat history and more.",
+    "registerTitle": "Create Account",
+    "registerDescription": "Create a free account to access all features.",
+    "email": "Email",
+    "emailPlaceholder": "example@amasya.edu.tr",
+    "password": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "name": "Full Name",
+    "namePlaceholder": "Your full name",
+    "login": "Sign In",
+    "register": "Sign Up",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWithEmail": "or continue with email",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Please enter a valid email address.",
+      "passwordRequired": "Password is required.",
+      "passwordMinLength": "Password must be at least 6 characters.",
+      "nameRequired": "Full name is required.",
+      "nameMinLength": "Full name must be at least 2 characters.",
+      "invalidCredentials": "Invalid email or password.",
+      "emailAlreadyRegistered": "This email is already registered.",
+      "authCallbackFailed": "An error occurred during sign in. Please try again.",
+      "unknown": "An error occurred. Please try again."
+    }
   }
 }

@@ -5,5 +5,35 @@
   },
   "home": {
     "title": "Amasya Üniversitesi Asistanı"
+  },
+  "auth": {
+    "loginTitle": "Giriş Yap",
+    "loginDescription": "AÜ Asistan'a giriş yaparak sohbet geçmişine ve daha fazlasına erişin.",
+    "registerTitle": "Hesap Oluştur",
+    "registerDescription": "Ücretsiz hesap oluşturarak tüm özelliklerden yararlanın.",
+    "email": "E-posta",
+    "emailPlaceholder": "ornek@amasya.edu.tr",
+    "password": "Şifre",
+    "passwordPlaceholder": "En az 6 karakter",
+    "name": "Ad Soyad",
+    "namePlaceholder": "Adınız ve soyadınız",
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "continueWithGoogle": "Google ile devam et",
+    "orContinueWithEmail": "veya e-posta ile devam edin",
+    "noAccount": "Hesabınız yok mu?",
+    "haveAccount": "Zaten hesabınız var mı?",
+    "errors": {
+      "emailRequired": "E-posta adresi gerekli.",
+      "emailInvalid": "Geçerli bir e-posta adresi girin.",
+      "passwordRequired": "Şifre gerekli.",
+      "passwordMinLength": "Şifre en az 6 karakter olmalı.",
+      "nameRequired": "Ad soyad gerekli.",
+      "nameMinLength": "Ad soyad en az 2 karakter olmalı.",
+      "invalidCredentials": "E-posta veya şifre hatalı.",
+      "emailAlreadyRegistered": "Bu e-posta adresi zaten kayıtlı.",
+      "authCallbackFailed": "Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.",
+      "unknown": "Bir hata oluştu. Lütfen tekrar deneyin."
+    }
   }
 }

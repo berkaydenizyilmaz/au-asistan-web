@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import { AuthProvider } from "@/features/auth/components/auth-provider";
 import "../globals.css";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
@@ -42,7 +43,9 @@ export default async function LocaleLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
