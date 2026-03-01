@@ -16,10 +16,9 @@ import {
 import { Link } from "@/i18n/navigation";
 
 import { useAuthForm } from "../hooks/use-auth-form";
-import { validateRegisterForm } from "../lib/validation";
+import { registerSchema } from "../lib/validation";
 import { signUpWithEmail } from "../lib/auth-actions";
 import { OAuthButtons } from "./oauth-buttons";
-import type { RegisterFormData } from "../types";
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -28,33 +27,25 @@ interface RegisterFormProps {
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const t = useTranslations("auth");
 
-  const { isLoading, errors, handleSubmit } = useAuthForm<RegisterFormData>({
-    validate: validateRegisterForm,
+  const { isLoading, rootError, handleSubmit, getFieldError } = useAuthForm({
+    schema: registerSchema,
     onSubmit: signUpWithEmail,
     onSuccess,
   });
 
-  function getFieldError(field: string) {
-    const error = errors.find((e) => e.field === field);
-    if (!error) return undefined;
-    return error.message.startsWith("auth.errors.")
-      ? t(error.message.replace("auth.", "") as never)
-      : error.message;
-  }
-
-  function getRootError() {
-    const error = errors.find((e) => e.field === "root");
-    if (!error) return undefined;
-    return error.message;
+  function resolveError(field: string) {
+    const key = getFieldError(field);
+    if (!key) return undefined;
+    return t(`errors.${key}` as never);
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     await handleSubmit({
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      name: formData.get("name"),
+      email: formData.get("email"),
+      password: formData.get("password"),
     });
   }
 
@@ -65,9 +56,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
         <FieldSeparator>{t("orContinueWithEmail")}</FieldSeparator>
 
-        {getRootError() && (
-          <FieldError>{getRootError()}</FieldError>
-        )}
+        {rootError && <FieldError>{rootError}</FieldError>}
 
         <Field>
           <FieldLabel>{t("name")}</FieldLabel>
@@ -76,10 +65,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             name="name"
             placeholder={t("namePlaceholder")}
             autoComplete="name"
-            required
           />
-          {getFieldError("name") && (
-            <FieldError>{getFieldError("name")}</FieldError>
+          {resolveError("name") && (
+            <FieldError>{resolveError("name")}</FieldError>
           )}
         </Field>
 
@@ -90,10 +78,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             name="email"
             placeholder={t("emailPlaceholder")}
             autoComplete="email"
-            required
           />
-          {getFieldError("email") && (
-            <FieldError>{getFieldError("email")}</FieldError>
+          {resolveError("email") && (
+            <FieldError>{resolveError("email")}</FieldError>
           )}
         </Field>
 
@@ -104,10 +91,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             name="password"
             placeholder={t("passwordPlaceholder")}
             autoComplete="new-password"
-            required
           />
-          {getFieldError("password") && (
-            <FieldError>{getFieldError("password")}</FieldError>
+          {resolveError("password") && (
+            <FieldError>{resolveError("password")}</FieldError>
           )}
         </Field>
 

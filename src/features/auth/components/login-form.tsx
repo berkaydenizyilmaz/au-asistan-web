@@ -16,10 +16,9 @@ import {
 import { Link } from "@/i18n/navigation";
 
 import { useAuthForm } from "../hooks/use-auth-form";
-import { validateLoginForm } from "../lib/validation";
+import { loginSchema } from "../lib/validation";
 import { signInWithEmail } from "../lib/auth-actions";
 import { OAuthButtons } from "./oauth-buttons";
-import type { LoginFormData } from "../types";
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -28,32 +27,24 @@ interface LoginFormProps {
 export function LoginForm({ onSuccess }: LoginFormProps) {
   const t = useTranslations("auth");
 
-  const { isLoading, errors, handleSubmit } = useAuthForm<LoginFormData>({
-    validate: validateLoginForm,
+  const { isLoading, rootError, handleSubmit, getFieldError } = useAuthForm({
+    schema: loginSchema,
     onSubmit: signInWithEmail,
     onSuccess,
   });
 
-  function getFieldError(field: string) {
-    const error = errors.find((e) => e.field === field);
-    if (!error) return undefined;
-    return error.message.startsWith("auth.errors.")
-      ? t(error.message.replace("auth.", "") as never)
-      : error.message;
-  }
-
-  function getRootError() {
-    const error = errors.find((e) => e.field === "root");
-    if (!error) return undefined;
-    return error.message;
+  function resolveError(field: string) {
+    const key = getFieldError(field);
+    if (!key) return undefined;
+    return t(`errors.${key}` as never);
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     await handleSubmit({
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      email: formData.get("email"),
+      password: formData.get("password"),
     });
   }
 
@@ -64,9 +55,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
         <FieldSeparator>{t("orContinueWithEmail")}</FieldSeparator>
 
-        {getRootError() && (
-          <FieldError>{getRootError()}</FieldError>
-        )}
+        {rootError && <FieldError>{rootError}</FieldError>}
 
         <Field>
           <FieldLabel>{t("email")}</FieldLabel>
@@ -75,10 +64,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             name="email"
             placeholder={t("emailPlaceholder")}
             autoComplete="email"
-            required
           />
-          {getFieldError("email") && (
-            <FieldError>{getFieldError("email")}</FieldError>
+          {resolveError("email") && (
+            <FieldError>{resolveError("email")}</FieldError>
           )}
         </Field>
 
@@ -89,10 +77,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             name="password"
             placeholder={t("passwordPlaceholder")}
             autoComplete="current-password"
-            required
           />
-          {getFieldError("password") && (
-            <FieldError>{getFieldError("password")}</FieldError>
+          {resolveError("password") && (
+            <FieldError>{resolveError("password")}</FieldError>
           )}
         </Field>
 

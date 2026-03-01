@@ -1,36 +1,39 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { AuthError } from "../types";
+import type { ZodSchema, ZodIssue } from "zod";
 
 interface UseAuthFormOptions<T> {
-  validate: (data: T) => AuthError[] | null;
+  schema: ZodSchema<T>;
   onSubmit: (data: T) => Promise<{ error: { message: string } | null }>;
   onSuccess: () => void;
 }
 
 export function useAuthForm<T>({
-  validate,
+  schema,
   onSubmit,
   onSuccess,
 }: UseAuthFormOptions<T>) {
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<AuthError[]>([]);
+  const [errors, setErrors] = useState<ZodIssue[]>([]);
+  const [rootError, setRootError] = useState<string | null>(null);
 
   const handleSubmit = useCallback(
-    async (data: T) => {
+    async (raw: unknown) => {
       setErrors([]);
-      const validationErrors = validate(data);
-      if (validationErrors) {
-        setErrors(validationErrors);
+      setRootError(null);
+
+      const result = schema.safeParse(raw);
+      if (!result.success) {
+        setErrors(result.error.issues);
         return;
       }
 
       setIsLoading(true);
       try {
-        const { error } = await onSubmit(data);
+        const { error } = await onSubmit(result.data);
         if (error) {
-          setErrors([{ message: error.message, field: "root" }]);
+          setRootError(error.message);
           return;
         }
         onSuccess();
@@ -38,8 +41,12 @@ export function useAuthForm<T>({
         setIsLoading(false);
       }
     },
-    [validate, onSubmit, onSuccess]
+    [schema, onSubmit, onSuccess]
   );
 
-  return { isLoading, errors, handleSubmit, setErrors };
+  function getFieldError(field: string): string | undefined {
+    return errors.find((e) => e.path[0] === field)?.message;
+  }
+
+  return { isLoading, errors, rootError, handleSubmit, getFieldError };
 }

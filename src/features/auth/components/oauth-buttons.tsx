@@ -38,8 +38,14 @@ export function OAuthButtons() {
 
   async function handleGoogleSignIn() {
     setIsLoading(true);
-    const { error } = await signInWithGoogle(params.locale);
-    if (error) {
+    try {
+      const { error } = await signInWithGoogle(params.locale);
+      if (error) {
+        console.error("Google OAuth error:", error.message);
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error("Unexpected OAuth error:", err);
       setIsLoading(false);
     }
   }

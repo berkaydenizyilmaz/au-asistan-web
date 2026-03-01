@@ -11,9 +11,20 @@ export function useAuthListener() {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data: { user }, error }) => {
+        if (error) {
+          console.error("Failed to get user:", error.message);
+          setUser(null);
+          return;
+        }
+        setUser(user);
+      })
+      .catch((err) => {
+        console.error("Unexpected error in getUser:", err);
+        setUser(null);
+      });
 
     const {
       data: { subscription },

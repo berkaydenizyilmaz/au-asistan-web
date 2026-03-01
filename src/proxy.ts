@@ -2,6 +2,7 @@ import createIntlMiddleware from "next-intl/middleware";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
+import { env } from "./lib/env";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -11,8 +12,8 @@ export default async function proxy(request: NextRequest) {
 
   // Refresh Supabase auth session on the same response
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.supabaseUrl,
+    env.supabaseAnonKey,
     {
       cookies: {
         getAll() {
