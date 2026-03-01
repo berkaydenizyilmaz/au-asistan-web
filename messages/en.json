@@ -1,0 +1,9 @@
+{
+  "common": {
+    "appName": "AU Assistant",
+    "loading": "Loading..."
+  },
+  "home": {
+    "title": "Amasya University Assistant"
+  }
+}
