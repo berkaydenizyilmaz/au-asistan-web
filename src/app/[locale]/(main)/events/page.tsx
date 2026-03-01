@@ -1,5 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
-import { getTranslations } from "next-intl/server";
+import { setRequestLocale, getTranslations } from "next-intl/server";
 
 interface EventsPageProps {
   params: Promise<{ locale: string }>;
@@ -14,10 +13,11 @@ export async function generateMetadata({ params }: EventsPageProps) {
 export default async function EventsPage({ params }: EventsPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "common" });
 
   return (
     <div>
-      <p className="text-muted-foreground">Coming soon...</p>
+      <p className="text-muted-foreground">{t("comingSoon")}</p>
     </div>
   );
 }

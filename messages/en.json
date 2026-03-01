@@ -1,6 +1,8 @@
 {
   "common": {
     "appName": "AU Assistant",
+    "appDescription": "University Assistant",
+    "comingSoon": "Coming soon...",
     "loading": "Loading..."
   },
   "home": {

@@ -8,15 +8,15 @@ import { Sun02Icon, Moon02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const t = useTranslations("nav");
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      aria-label={theme === "dark" ? t("lightMode") : t("darkMode")}
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      aria-label={resolvedTheme === "dark" ? t("lightMode") : t("darkMode")}
     >
       <HugeiconsIcon
         icon={Sun02Icon}

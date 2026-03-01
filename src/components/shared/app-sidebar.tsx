@@ -17,7 +17,7 @@ import {
 
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { signOut } from "@/features/auth/lib/auth-actions";
+import { createClient } from "@/lib/supabase/client";
 import { logger } from "@/lib/logger";
 import {
   Sidebar,
@@ -50,6 +50,7 @@ const NAV_ITEMS = [
 
 export function AppSidebar() {
   const t = useTranslations("nav");
+  const tc = useTranslations("common");
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -59,15 +60,17 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip="AÜ Asistan">
+            <SidebarMenuButton asChild size="lg" tooltip={tc("appName")}>
               <Link href="/">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
                   AÜ
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate font-semibold">AÜ Asistan</span>
+                  <span className="truncate font-semibold">
+                    {tc("appName")}
+                  </span>
                   <span className="truncate text-xs text-sidebar-foreground/70">
-                    Üniversite Asistanı
+                    {tc("appDescription")}
                   </span>
                 </div>
               </Link>
@@ -149,7 +152,8 @@ function UserDropdown() {
   const t = useTranslations("nav");
 
   async function handleLogout() {
-    const { error } = await signOut();
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
     if (error) {
       logger.error("Logout failed", error.message);
     }

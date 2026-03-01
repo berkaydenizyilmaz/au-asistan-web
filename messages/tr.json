@@ -1,6 +1,8 @@
 {
   "common": {
     "appName": "AÜ Asistan",
+    "appDescription": "Üniversite Asistanı",
+    "comingSoon": "Çok yakında...",
     "loading": "Yükleniyor..."
   },
   "home": {
