@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { logger } from "@/lib/logger";
 
 export function useAuthListener() {
   const setUser = useAuthStore((s) => s.setUser);
@@ -17,7 +18,7 @@ export function useAuthListener() {
         setUser(user ?? null);
       })
       .catch((err) => {
-        console.error("Unexpected error in getUser:", err);
+        logger.error("Unexpected error in getUser", err);
         setUser(null);
       });
 

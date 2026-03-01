@@ -1,6 +1,7 @@
 "use client";
 
-import { type FormEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,9 @@ import {
 } from "@/components/ui/field";
 
 import { Link } from "@/i18n/navigation";
+import { logger } from "@/lib/logger";
 
-import { useAuthForm } from "../hooks/use-auth-form";
-import { loginSchema } from "../lib/validation";
+import { loginSchema, type LoginFormData } from "../lib/validation";
 import { signInWithEmail } from "../lib/auth-actions";
 import { OAuthButtons } from "./oauth-buttons";
 
@@ -27,46 +28,49 @@ interface LoginFormProps {
 export function LoginForm({ onSuccess }: LoginFormProps) {
   const t = useTranslations("auth");
 
-  const { isLoading, rootError, handleSubmit, getFieldError } = useAuthForm({
-    schema: loginSchema,
-    onSubmit: signInWithEmail,
-    onSuccess,
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  function resolveError(field: string) {
-    const key = getFieldError(field);
-    if (!key) return undefined;
-    return t(`errors.${key}` as never);
+  function resolveError(error?: { message?: string }) {
+    if (!error?.message) return undefined;
+    return t(`errors.${error.message}` as never);
   }
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    await handleSubmit({
-      email: formData.get("email"),
-      password: formData.get("password"),
-    });
+  async function onSubmit(data: LoginFormData) {
+    const { error } = await signInWithEmail(data);
+    if (error) {
+      logger.error("Login failed", error.message);
+      setError("root", { message: error.message });
+      return;
+    }
+    onSuccess();
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <FieldGroup>
         <OAuthButtons />
 
         <FieldSeparator>{t("orContinueWithEmail")}</FieldSeparator>
 
-        {rootError && <FieldError>{rootError}</FieldError>}
+        {errors.root && <FieldError>{errors.root.message}</FieldError>}
 
         <Field>
           <FieldLabel>{t("email")}</FieldLabel>
           <Input
             type="email"
-            name="email"
             placeholder={t("emailPlaceholder")}
             autoComplete="email"
+            {...register("email")}
           />
-          {resolveError("email") && (
-            <FieldError>{resolveError("email")}</FieldError>
+          {errors.email && (
+            <FieldError>{resolveError(errors.email)}</FieldError>
           )}
         </Field>
 
@@ -74,16 +78,21 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           <FieldLabel>{t("password")}</FieldLabel>
           <Input
             type="password"
-            name="password"
             placeholder={t("passwordPlaceholder")}
             autoComplete="current-password"
+            {...register("password")}
           />
-          {resolveError("password") && (
-            <FieldError>{resolveError("password")}</FieldError>
+          {errors.password && (
+            <FieldError>{resolveError(errors.password)}</FieldError>
           )}
         </Field>
 
-        <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          disabled={isSubmitting}
+        >
           {t("login")}
         </Button>
 

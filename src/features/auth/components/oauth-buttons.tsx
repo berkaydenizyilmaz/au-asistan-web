@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 
 import { signInWithGoogle } from "../lib/auth-actions";
 
@@ -41,11 +42,11 @@ export function OAuthButtons() {
     try {
       const { error } = await signInWithGoogle(params.locale);
       if (error) {
-        console.error("Google OAuth error:", error.message);
+        logger.error("Google OAuth error", error.message);
         setIsLoading(false);
       }
     } catch (err) {
-      console.error("Unexpected OAuth error:", err);
+      logger.error("Unexpected OAuth error", err);
       setIsLoading(false);
     }
   }
