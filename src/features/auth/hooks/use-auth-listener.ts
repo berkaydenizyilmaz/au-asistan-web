@@ -13,13 +13,8 @@ export function useAuthListener() {
 
     supabase.auth
       .getUser()
-      .then(({ data: { user }, error }) => {
-        if (error) {
-          console.error("Failed to get user:", error.message);
-          setUser(null);
-          return;
-        }
-        setUser(user);
+      .then(({ data: { user } }) => {
+        setUser(user ?? null);
       })
       .catch((err) => {
         console.error("Unexpected error in getUser:", err);
