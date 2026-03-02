@@ -1,6 +1,7 @@
 import {
   date,
   foreignKey,
+  integer,
   jsonb,
   pgPolicy,
   pgTable,
@@ -72,6 +73,7 @@ export const meals = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     date: date().notNull(),
     items: jsonb().notNull(),
+    calories: integer(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

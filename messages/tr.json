@@ -38,6 +38,44 @@
       "unknown": "Bir hata oluştu. Lütfen tekrar deneyin."
     }
   },
+  "meals": {
+    "title": "Yemek Listesi",
+    "noMeals": "Bu ay için yemek listesi bulunamadı.",
+    "calories": "{count} Kalori",
+    "soup": "Çorba",
+    "main": "Ana Yemek",
+    "side": "Yan Yemek",
+    "dessert": "Tatlı / İçecek",
+    "like": "Beğen",
+    "dislike": "Beğenme",
+    "loginToRate": "Puanlamak için giriş yapın.",
+    "today": "Bugün",
+    "previousMonth": "Önceki Ay",
+    "nextMonth": "Sonraki Ay",
+    "weekdays": {
+      "mon": "Pzt",
+      "tue": "Sal",
+      "wed": "Çar",
+      "thu": "Per",
+      "fri": "Cum",
+      "sat": "Cmt",
+      "sun": "Paz"
+    },
+    "months": {
+      "1": "Ocak",
+      "2": "Şubat",
+      "3": "Mart",
+      "4": "Nisan",
+      "5": "Mayıs",
+      "6": "Haziran",
+      "7": "Temmuz",
+      "8": "Ağustos",
+      "9": "Eylül",
+      "10": "Ekim",
+      "11": "Kasım",
+      "12": "Aralık"
+    }
+  },
   "nav": {
     "home": "Ana Sayfa",
     "meals": "Yemek Listesi",

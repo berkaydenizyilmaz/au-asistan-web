@@ -38,6 +38,44 @@
       "unknown": "An error occurred. Please try again."
     }
   },
+  "meals": {
+    "title": "Meal List",
+    "noMeals": "No meals found for this month.",
+    "calories": "{count} Calories",
+    "soup": "Soup",
+    "main": "Main Course",
+    "side": "Side Dish",
+    "dessert": "Dessert / Beverage",
+    "like": "Like",
+    "dislike": "Dislike",
+    "loginToRate": "Sign in to rate meals.",
+    "today": "Today",
+    "previousMonth": "Previous Month",
+    "nextMonth": "Next Month",
+    "weekdays": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
+  },
   "nav": {
     "home": "Home",
     "meals": "Meals",
