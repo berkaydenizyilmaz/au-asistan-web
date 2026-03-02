@@ -170,7 +170,7 @@ function UserDropdown() {
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
             {initial}
           </div>
-          <div className="flex flex-col text-left text-sm leading-tight">
+          <div className="flex min-w-0 flex-1 flex-col text-left text-sm leading-tight">
             <span className="truncate font-medium">{displayName}</span>
             {user?.user_metadata?.full_name && (
               <span className="truncate text-xs text-muted-foreground">
@@ -178,7 +178,7 @@ function UserDropdown() {
               </span>
             )}
           </div>
-          <HugeiconsIcon icon={ChevronsUpDown} className="ml-auto size-4" />
+          <HugeiconsIcon icon={ChevronsUpDown} className="shrink-0 size-4" />
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent
