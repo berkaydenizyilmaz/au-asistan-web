@@ -40,7 +40,8 @@
   },
   "meals": {
     "title": "Yemek Listesi",
-    "noMeals": "Bu ay için yemek listesi bulunamadı.",
+    "noMeals": "Bu dönem için yemek listesi bulunamadı.",
+    "noMealToday": "Bugün için yemek listesi yok.",
     "calories": "{count} Kalori",
     "soup": "Çorba",
     "main": "Ana Yemek",
@@ -48,10 +49,14 @@
     "dessert": "Tatlı / İçecek",
     "like": "Beğen",
     "dislike": "Beğenme",
-    "loginToRate": "Puanlamak için giriş yapın.",
+    "loginToRate": "Puanlamak için giriş yapın",
     "today": "Bugün",
-    "previousMonth": "Önceki Ay",
-    "nextMonth": "Sonraki Ay",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "viewDaily": "Günlük",
+    "viewWeekly": "Haftalık",
+    "viewMonthly": "Aylık",
+    "weekLabel": "{start} – {end}",
     "weekdays": {
       "mon": "Pzt",
       "tue": "Sal",
@@ -60,6 +65,15 @@
       "fri": "Cum",
       "sat": "Cmt",
       "sun": "Paz"
+    },
+    "weekdaysFull": {
+      "mon": "Pazartesi",
+      "tue": "Salı",
+      "wed": "Çarşamba",
+      "thu": "Perşembe",
+      "fri": "Cuma",
+      "sat": "Cumartesi",
+      "sun": "Pazar"
     },
     "months": {
       "1": "Ocak",

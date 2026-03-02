@@ -6,10 +6,17 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@hugeicons/core-free-icons";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAuthStore } from "@/stores/auth-store";
 
 interface MealRatingProps {
   mealId: string;
+  isToday: boolean;
 }
 
 interface RatingData {
@@ -18,7 +25,7 @@ interface RatingData {
   userRating: "like" | "dislike" | null;
 }
 
-export function MealRating({ mealId }: MealRatingProps) {
+export function MealRating({ mealId, isToday }: MealRatingProps) {
   const t = useTranslations("meals");
   const user = useAuthStore((s) => s.user);
   const [data, setData] = useState<RatingData | null>(null);
@@ -32,7 +39,7 @@ export function MealRating({ mealId }: MealRatingProps) {
         setData(json.data);
       }
     } catch {
-      // Silently fail — rating is non-critical
+      // Rating is non-critical
     }
   }, [mealId]);
 
@@ -41,11 +48,10 @@ export function MealRating({ mealId }: MealRatingProps) {
   }, [fetchRating]);
 
   async function handleRate(rating: "like" | "dislike") {
-    if (!user || isSubmitting) return;
+    if (!user || isSubmitting || !isToday) return;
 
-    setIsSubmitting(true);
+    const wasToggle = data?.userRating === rating;
 
-    // Optimistic update
     setData((prev) => {
       if (!prev) return prev;
       const isToggle = prev.userRating === rating;
@@ -62,15 +68,11 @@ export function MealRating({ mealId }: MealRatingProps) {
       };
     });
 
-    // Capture current state before optimistic update overwrites it
-    const wasToggle = data?.userRating === rating;
-
+    setIsSubmitting(true);
     try {
       if (wasToggle) {
-        // Toggle off — delete rating
         await fetch(`/api/meals/${mealId}/rate`, { method: "DELETE" });
       } else {
-        // Set or change rating
         await fetch(`/api/meals/${mealId}/rate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -78,45 +80,109 @@ export function MealRating({ mealId }: MealRatingProps) {
         });
       }
     } catch {
-      // Revert on error
       await fetchRating();
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  if (!data) return null;
+  // Loading
+  if (!data) {
+    return (
+      <div className="flex items-center gap-2 pt-3 border-t border-border/50 mt-3">
+        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+      </div>
+    );
+  }
+
+  const hasAnyRatings = data.likes > 0 || data.dislikes > 0;
+
+  // Past days: read-only counts
+  if (!isToday) {
+    if (!hasAnyRatings) return null;
+
+    return (
+      <div className="flex items-center gap-3 pt-3 border-t border-border/50 mt-3 text-muted-foreground">
+        {data.likes > 0 && (
+          <span className="flex items-center gap-1.5 text-sm">
+            <HugeiconsIcon icon={ThumbsUpIcon} className="size-4" />
+            {data.likes}
+          </span>
+        )}
+        {data.dislikes > 0 && (
+          <span className="flex items-center gap-1.5 text-sm">
+            <HugeiconsIcon icon={ThumbsDownIcon} className="size-4" />
+            {data.dislikes}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // Today: interactive
+  const canRate = !!user;
+
+  const likeButton = (
+    <Button
+      variant={data.userRating === "like" ? "default" : "outline"}
+      size="sm"
+      onClick={() => handleRate("like")}
+      disabled={!canRate || isSubmitting}
+      aria-label={t("like")}
+      className="gap-1.5"
+    >
+      <HugeiconsIcon icon={ThumbsUpIcon} />
+      {data.likes > 0 && (
+        <span className="tabular-nums">{data.likes}</span>
+      )}
+    </Button>
+  );
+
+  const dislikeButton = (
+    <Button
+      variant={data.userRating === "dislike" ? "destructive" : "outline"}
+      size="sm"
+      onClick={() => handleRate("dislike")}
+      disabled={!canRate || isSubmitting}
+      aria-label={t("dislike")}
+      className="gap-1.5"
+    >
+      <HugeiconsIcon icon={ThumbsDownIcon} />
+      {data.dislikes > 0 && (
+        <span className="tabular-nums">{data.dislikes}</span>
+      )}
+    </Button>
+  );
+
+  // Not logged in: wrap each button in tooltip
+  if (!canRate) {
+    return (
+      <div className="flex items-center gap-2 pt-3 border-t border-border/50 mt-3">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>{likeButton}</TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{t("loginToRate")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>{dislikeButton}</TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{t("loginToRate")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex items-center gap-1 pt-1">
-      <Button
-        variant={data.userRating === "like" ? "default" : "ghost"}
-        size="icon-xs"
-        onClick={() => handleRate("like")}
-        disabled={!user || isSubmitting}
-        aria-label={t("like")}
-      >
-        <HugeiconsIcon icon={ThumbsUpIcon} />
-      </Button>
-      {data.likes > 0 && (
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {data.likes}
-        </span>
-      )}
-      <Button
-        variant={data.userRating === "dislike" ? "destructive" : "ghost"}
-        size="icon-xs"
-        onClick={() => handleRate("dislike")}
-        disabled={!user || isSubmitting}
-        aria-label={t("dislike")}
-      >
-        <HugeiconsIcon icon={ThumbsDownIcon} />
-      </Button>
-      {data.dislikes > 0 && (
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {data.dislikes}
-        </span>
-      )}
+    <div className="flex items-center gap-2 pt-3 border-t border-border/50 mt-3">
+      {likeButton}
+      {dislikeButton}
     </div>
   );
 }

@@ -40,7 +40,8 @@
   },
   "meals": {
     "title": "Meal List",
-    "noMeals": "No meals found for this month.",
+    "noMeals": "No meals found for this period.",
+    "noMealToday": "No meal listed for today.",
     "calories": "{count} Calories",
     "soup": "Soup",
     "main": "Main Course",
@@ -48,10 +49,14 @@
     "dessert": "Dessert / Beverage",
     "like": "Like",
     "dislike": "Dislike",
-    "loginToRate": "Sign in to rate meals.",
+    "loginToRate": "Sign in to rate meals",
     "today": "Today",
-    "previousMonth": "Previous Month",
-    "nextMonth": "Next Month",
+    "previous": "Previous",
+    "next": "Next",
+    "viewDaily": "Daily",
+    "viewWeekly": "Weekly",
+    "viewMonthly": "Monthly",
+    "weekLabel": "{start} – {end}",
     "weekdays": {
       "mon": "Mon",
       "tue": "Tue",
@@ -60,6 +65,15 @@
       "fri": "Fri",
       "sat": "Sat",
       "sun": "Sun"
+    },
+    "weekdaysFull": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
     },
     "months": {
       "1": "January",
