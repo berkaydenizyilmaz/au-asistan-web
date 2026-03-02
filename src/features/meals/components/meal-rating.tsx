@@ -70,16 +70,20 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
 
     setIsSubmitting(true);
     try {
-      if (wasToggle) {
-        await fetch(`/api/meals/${mealId}/rate`, { method: "DELETE" });
-      } else {
-        await fetch(`/api/meals/${mealId}/rate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rating }),
-        });
+      const res = wasToggle
+        ? await fetch(`/api/meals/${mealId}/rate`, { method: "DELETE" })
+        : await fetch(`/api/meals/${mealId}/rate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rating }),
+          });
+
+      if (!res.ok) {
+        // API returned an error — revert optimistic update
+        await fetchRating();
       }
     } catch {
+      // Network error — revert optimistic update
       await fetchRating();
     } finally {
       setIsSubmitting(false);
@@ -89,39 +93,14 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
   // Loading
   if (!data) {
     return (
-      <div className="flex items-center gap-2 pt-3 border-t border-border/50 mt-3">
-        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+      <div className="flex justify-center items-center gap-2 border-t border-border/40 mt-2 pt-2">
+        <div className="h-8 w-16 rounded-md bg-muted animate-pulse" />
+        <div className="h-8 w-16 rounded-md bg-muted animate-pulse" />
       </div>
     );
   }
 
-  const hasAnyRatings = data.likes > 0 || data.dislikes > 0;
-
-  // Past days: read-only counts
-  if (!isToday) {
-    if (!hasAnyRatings) return null;
-
-    return (
-      <div className="flex items-center gap-3 pt-3 border-t border-border/50 mt-3 text-muted-foreground">
-        {data.likes > 0 && (
-          <span className="flex items-center gap-1.5 text-sm">
-            <HugeiconsIcon icon={ThumbsUpIcon} className="size-4" />
-            {data.likes}
-          </span>
-        )}
-        {data.dislikes > 0 && (
-          <span className="flex items-center gap-1.5 text-sm">
-            <HugeiconsIcon icon={ThumbsDownIcon} className="size-4" />
-            {data.dislikes}
-          </span>
-        )}
-      </div>
-    );
-  }
-
-  // Today: interactive
-  const canRate = !!user;
+  const canRate = !!user && isToday;
 
   const likeButton = (
     <Button
@@ -155,23 +134,35 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
     </Button>
   );
 
-  // Not logged in: wrap each button in tooltip
-  if (!canRate) {
+  // Determine tooltip message
+  const tooltipMessage = !user
+    ? t("loginToRate")
+    : !isToday
+      ? t("onlyTodayCanRate")
+      : null;
+
+  // Show tooltip when buttons are disabled (not logged in or not today)
+  // Wrap in span so hover works even when button has pointer-events: none
+  if (tooltipMessage) {
     return (
-      <div className="flex items-center gap-2 pt-3 border-t border-border/50 mt-3">
+      <div className="flex justify-center items-center gap-2 border-t border-border/40 mt-2 pt-2">
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger asChild>{likeButton}</TooltipTrigger>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{likeButton}</span>
+            </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{t("loginToRate")}</p>
+              <p>{tooltipMessage}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger asChild>{dislikeButton}</TooltipTrigger>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{dislikeButton}</span>
+            </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{t("loginToRate")}</p>
+              <p>{tooltipMessage}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -179,8 +170,9 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
     );
   }
 
+  // Today + logged in: interactive, no tooltip
   return (
-    <div className="flex items-center gap-2 pt-3 border-t border-border/50 mt-3">
+    <div className="flex justify-center items-center gap-2 border-t border-border/40 mt-2 pt-2">
       {likeButton}
       {dislikeButton}
     </div>

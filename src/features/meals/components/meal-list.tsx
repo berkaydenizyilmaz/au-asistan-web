@@ -34,14 +34,14 @@ export function MealList({ meals, view }: MealListProps) {
 
   const todayStr = getTodayStr();
 
-  // Daily: centered, generous spacing
+  // Daily: compact centered card
   if (view === "daily") {
     const meal = meals[0];
     const isToday = meal.date === todayStr;
 
     return (
-      <div className="flex items-start justify-center pt-4">
-        <div className="w-full max-w-2xl">
+      <div className="flex justify-center pt-2">
+        <div className="w-full max-w-md">
           <MealCard
             date={meal.date}
             items={meal.items}
@@ -56,10 +56,10 @@ export function MealList({ meals, view }: MealListProps) {
     );
   }
 
-  // Weekly: centered column
+  // Weekly: 2 columns on large screens
   if (view === "weekly") {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 max-w-3xl mx-auto">
         {meals.map((meal) => {
           const isToday = meal.date === todayStr;
           return (
@@ -69,7 +69,6 @@ export function MealList({ meals, view }: MealListProps) {
               items={meal.items}
               calories={meal.calories}
               isToday={isToday}
-              expanded
             >
               <MealRating mealId={meal.id} isToday={isToday} />
             </MealCard>
@@ -79,9 +78,9 @@ export function MealList({ meals, view }: MealListProps) {
     );
   }
 
-  // Monthly: responsive grid
+  // Monthly: responsive grid — larger min column width for uniform card sizes
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {meals.map((meal) => {
         const isToday = meal.date === todayStr;
         return (

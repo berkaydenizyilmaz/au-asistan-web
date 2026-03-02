@@ -1,12 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { cn, toTitleCase } from "@/lib/utils";
 
 import type { MealItem, MealCategory } from "../types";
 
@@ -50,47 +45,74 @@ export function MealCard({
   }
 
   return (
-    <Card className={isToday ? "ring-primary ring-2" : ""}>
-      <CardHeader>
+    <div
+      className={cn(
+        "flex flex-col rounded-xl border bg-card text-card-foreground transition-colors",
+        isToday
+          ? "border-l-4 border-l-primary border-t-border border-r-border border-b-border bg-primary/3"
+          : "border-border"
+      )}
+    >
+      {/* Header */}
+      <div className={cn("px-4 pt-4", expanded ? "px-5 pt-5" : "")}>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2.5">
-            <span className="text-3xl font-bold tabular-nums leading-none">
+          <div className="flex items-center gap-2.5">
+            <span className={cn(
+              "font-bold tabular-nums leading-none",
+              expanded ? "text-3xl" : "text-2xl"
+            )}>
               {dayNumber}
             </span>
-            <div className="flex flex-col">
-              <span className="text-muted-foreground text-sm font-normal">
-                {weekday}
+            <span className="text-muted-foreground text-sm leading-none">
+              {weekday}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {calories !== null && (
+              <span className={cn(
+                "tabular-nums font-medium text-muted-foreground",
+                expanded ? "text-sm" : "text-xs"
+              )}>
+                {t("calories", { count: calories })}
               </span>
-              {calories !== null && (
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  {t("calories", { count: calories })}
-                </span>
-              )}
-            </div>
-            {isToday && <Badge variant="default">{t("today")}</Badge>}
-          </CardTitle>
+            )}
+            {isToday && (
+              <Badge variant="default" className="text-xs">
+                {t("today")}
+              </Badge>
+            )}
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className={expanded ? "space-y-3" : "space-y-2"}>
-          {CATEGORY_ORDER.map((category) => {
-            const categoryItems = itemsByCategory.get(category);
-            if (!categoryItems) return null;
+      </div>
 
-            return (
-              <div key={category} className="flex items-start gap-3">
-                <span className="text-muted-foreground text-xs min-w-20 pt-0.5 shrink-0 uppercase tracking-wider">
-                  {t(category)}
-                </span>
-                <span className={expanded ? "text-base" : "text-sm"}>
-                  {categoryItems.map((item) => item.name).join(", ")}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+      {/* Items */}
+      <div className={cn("flex-1 px-4 py-3", expanded ? "px-5 py-4 space-y-2.5" : "space-y-1.5")}>
+        {CATEGORY_ORDER.map((category) => {
+          const categoryItems = itemsByCategory.get(category);
+          if (!categoryItems) return null;
+
+          return (
+            <div key={category} className="flex items-baseline gap-3">
+              <span className={cn(
+                "text-muted-foreground shrink-0 uppercase tracking-wide leading-tight",
+                expanded ? "text-[11px] w-22" : "text-[10px] w-18"
+              )}>
+                {t(category)}
+              </span>
+              <span className={cn("flex-1", expanded ? "text-[15px]" : "text-sm")}>
+                {categoryItems
+                  .map((item) => toTitleCase(item.name))
+                  .join(", ")}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Rating slot — always rendered for uniform height */}
+      <div className={cn("px-4 pb-4", expanded ? "px-5 pb-5" : "")}>
         {children}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

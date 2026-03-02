@@ -50,6 +50,7 @@
     "like": "Like",
     "dislike": "Dislike",
     "loginToRate": "Sign in to rate meals",
+    "onlyTodayCanRate": "Only today's meal can be rated",
     "today": "Today",
     "previous": "Previous",
     "next": "Next",

@@ -107,34 +107,28 @@ export async function POST(request: Request, context: RouteContext) {
       return errorResponse("NOT_FOUND", "Meal not found", 404);
     }
 
-    // Upsert rating via RLS client
-    const existing = await db.rls(async (tx) => {
-      return tx
-        .select({ id: mealRatings.id })
-        .from(mealRatings)
-        .where(
-          and(
-            eq(mealRatings.mealId, id),
-            eq(mealRatings.userId, user.id)
-          )
+    // Upsert rating — auth already verified above via getUser()
+    const existing = await db.admin
+      .select({ id: mealRatings.id })
+      .from(mealRatings)
+      .where(
+        and(
+          eq(mealRatings.mealId, id),
+          eq(mealRatings.userId, user.id)
         )
-        .limit(1);
-    });
+      )
+      .limit(1);
 
     if (existing.length > 0) {
-      await db.rls(async (tx) => {
-        return tx
-          .update(mealRatings)
-          .set({ rating })
-          .where(eq(mealRatings.id, existing[0].id));
-      });
+      await db.admin
+        .update(mealRatings)
+        .set({ rating })
+        .where(eq(mealRatings.id, existing[0].id));
     } else {
-      await db.rls(async (tx) => {
-        return tx.insert(mealRatings).values({
-          mealId: id,
-          userId: user.id,
-          rating,
-        });
+      await db.admin.insert(mealRatings).values({
+        mealId: id,
+        userId: user.id,
+        rating,
       });
     }
 
@@ -163,16 +157,14 @@ export async function DELETE(_request: Request, context: RouteContext) {
   try {
     const db = await createDrizzleSupabaseClient();
 
-    await db.rls(async (tx) => {
-      return tx
-        .delete(mealRatings)
-        .where(
-          and(
-            eq(mealRatings.mealId, id),
-            eq(mealRatings.userId, user.id)
-          )
-        );
-    });
+    await db.admin
+      .delete(mealRatings)
+      .where(
+        and(
+          eq(mealRatings.mealId, id),
+          eq(mealRatings.userId, user.id)
+        )
+      );
 
     return successResponse({ deleted: true });
   } catch (error) {
