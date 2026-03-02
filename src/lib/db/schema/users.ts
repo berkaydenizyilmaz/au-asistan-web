@@ -1,5 +1,4 @@
 import {
-  boolean,
   foreignKey,
   jsonb,
   pgPolicy,
