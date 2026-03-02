@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { LoginForm } from "@/features/auth/components/login-form";
 import { LoginPageClient } from "./client";
 
 export async function generateMetadata({

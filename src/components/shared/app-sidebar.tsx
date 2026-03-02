@@ -133,7 +133,7 @@ export function AppSidebar() {
             {isLoading ? null : user ? (
               <UserDropdown />
             ) : (
-              <SidebarMenuButton asChild tooltip={t("login")}>
+              <SidebarMenuButton asChild tooltip={t("login")} className="justify-center">
                 <Link href="/login">
                   <HugeiconsIcon icon={Login01Icon} />
                   <span>{t("login")}</span>
