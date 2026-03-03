@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -31,6 +32,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -54,6 +56,12 @@ export function AppSidebar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const { closeMobileOnly } = useSidebar();
+
+  // Close sidebar on route change (mobile only)
+  useEffect(() => {
+    closeMobileOnly();
+  }, [pathname, closeMobileOnly]);
 
   return (
     <Sidebar collapsible="icon">
