@@ -3,19 +3,18 @@ import { and, asc, gte, lte } from "drizzle-orm";
 import { successResponse, errorResponse } from "@/lib/api";
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { meals } from "@/lib/db/schema/content";
+import { getMonthRange } from "@/features/meals/lib/date-utils";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const from = searchParams.get("from");
-  const to = searchParams.get("to");
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
 
   // Default to current month if no range provided
   const now = new Date();
-  const defaultFrom =
-    from ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-  const defaultTo =
-    to ??
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
+  const currentRange = getMonthRange(now.getFullYear(), now.getMonth() + 1);
+  const defaultFrom = fromParam ?? currentRange.from;
+  const defaultTo = toParam ?? currentRange.to;
 
   // Validate date format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;

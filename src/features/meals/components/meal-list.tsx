@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import type { MealItem } from "../types";
+import { getTodayStr } from "../lib/date-utils";
 import type { ViewMode } from "./meal-navigation";
 import { MealCard } from "./meal-card";
 import { MealRating } from "./meal-rating";
@@ -15,11 +16,6 @@ interface MealData {
 interface MealListProps {
   meals: MealData[];
   view: ViewMode;
-}
-
-function getTodayStr() {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 }
 
 export function MealList({ meals, view }: MealListProps) {

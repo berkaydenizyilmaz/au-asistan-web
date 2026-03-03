@@ -7,6 +7,13 @@ import { MealList } from "@/features/meals/components/meal-list";
 import { MealNavigation } from "@/features/meals/components/meal-navigation";
 import type { ViewMode } from "@/features/meals/components/meal-navigation";
 import type { MealItem } from "@/features/meals/types";
+import {
+  formatDate,
+  formatMonth,
+  getMonday,
+  getMonthRange,
+  clampMonth,
+} from "@/features/meals/lib/date-utils";
 
 interface MealsPageProps {
   params: Promise<{ locale: string }>;
@@ -17,35 +24,6 @@ export async function generateMetadata({ params }: MealsPageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meals" });
   return { title: t("title") };
-}
-
-// Clamp date to valid range: Sep 2025 – current month
-function clampDate(year: number, month: number) {
-  const now = new Date();
-  const nowYear = now.getFullYear();
-  const nowMonth = now.getMonth() + 1;
-
-  // Min: September 2025
-  if (year < 2025 || (year === 2025 && month < 9)) {
-    return { year: 2025, month: 9 };
-  }
-  // Max: current month
-  if (year > nowYear || (year === nowYear && month > nowMonth)) {
-    return { year: nowYear, month: nowMonth };
-  }
-  return { year, month };
-}
-
-function getMonday(d: Date): Date {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-  return date;
-}
-
-function formatDate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export default async function MealsPage({
@@ -75,7 +53,7 @@ export default async function MealsPage({
   }
 
   // Clamp to valid range
-  const clamped = clampDate(year, month);
+  const clamped = clampMonth(year, month);
   year = clamped.year;
   month = clamped.month;
 
@@ -94,7 +72,7 @@ export default async function MealsPage({
   const db = await createDrizzleSupabaseClient();
 
   if (view === "daily") {
-    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateStr = `${formatMonth(year, month)}-${String(day).padStart(2, "0")}`;
     const mealData = await db.admin
       .select()
       .from(meals)
@@ -147,9 +125,7 @@ export default async function MealsPage({
   }
 
   // Monthly view
-  const from = `${year}-${String(month).padStart(2, "0")}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const to = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  const { from, to } = getMonthRange(year, month);
 
   const mealData = await db.admin
     .select()

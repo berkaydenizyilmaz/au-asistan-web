@@ -3,11 +3,11 @@ import { eq } from "drizzle-orm";
 import { successResponse, errorResponse } from "@/lib/api";
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { meals } from "@/lib/db/schema/content";
+import { getTodayStr } from "@/features/meals/lib/date-utils";
 
 export async function GET() {
   try {
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const dateStr = getTodayStr();
 
     const db = await createDrizzleSupabaseClient();
     const result = await db.admin

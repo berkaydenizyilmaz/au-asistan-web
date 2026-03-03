@@ -11,6 +11,8 @@ import {
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 
+import { skipWeekends, isBeforeMin, isAfterNow } from "../lib/date-utils";
+
 export type ViewMode = "daily" | "weekly" | "monthly";
 
 interface MealNavigationProps {
@@ -20,19 +22,8 @@ interface MealNavigationProps {
   view: ViewMode;
 }
 
-const MIN_YEAR = 2026;
-const MIN_MONTH = 1;
-
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VIEW_MODES: ViewMode[] = ["daily", "weekly", "monthly"];
-
-// Skip weekends in a given direction (+1 forward, -1 backward)
-function skipWeekends(d: Date, direction: 1 | -1): Date {
-  while (d.getDay() === 0 || d.getDay() === 6) {
-    d.setDate(d.getDate() + direction);
-  }
-  return d;
-}
 
 // Get the target date after stepping in a direction based on view mode
 function getSteppedDate(view: ViewMode, year: number, month: number, day: number, direction: 1 | -1) {
@@ -51,18 +42,6 @@ function getSteppedDate(view: ViewMode, year: number, month: number, day: number
   if (m < 1) { m = 12; y--; }
   if (m > 12) { m = 1; y++; }
   return { year: y, month: m, day };
-}
-
-function isBeforeMin(year: number, month: number) {
-  return year < MIN_YEAR || (year === MIN_YEAR && month < MIN_MONTH);
-}
-
-function isAfterNow(year: number, month: number, day?: number) {
-  const now = new Date();
-  if (year > now.getFullYear()) return true;
-  if (year === now.getFullYear() && month > now.getMonth() + 1) return true;
-  if (day && year === now.getFullYear() && month === now.getMonth() + 1 && day > now.getDate()) return true;
-  return false;
 }
 
 export function MealNavigation({ year, month, day, view }: MealNavigationProps) {
