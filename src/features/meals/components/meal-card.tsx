@@ -36,7 +36,6 @@ export function MealCard({
     ? t(`weekdaysFull.${weekdayKey}`)
     : t(`weekdays.${weekdayKey}`);
 
-  // Group items by category
   const itemsByCategory = new Map<MealCategory, MealItem[]>();
   for (const item of items) {
     const existing = itemsByCategory.get(item.category) ?? [];
@@ -53,7 +52,6 @@ export function MealCard({
           : "border-border"
       )}
     >
-      {/* Header */}
       <div className={cn("px-4 pt-4", expanded ? "px-5 pt-5" : "")}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -85,7 +83,6 @@ export function MealCard({
         </div>
       </div>
 
-      {/* Items */}
       <div className={cn("flex-1 px-4 py-3", expanded ? "px-5 py-4 space-y-2.5" : "space-y-1.5")}>
         {CATEGORY_ORDER.map((category) => {
           const categoryItems = itemsByCategory.get(category);
@@ -109,7 +106,6 @@ export function MealCard({
         })}
       </div>
 
-      {/* Rating slot — always rendered for uniform height */}
       <div className={cn("px-4 pb-4", expanded ? "px-5 pb-5" : "")}>
         {children}
       </div>

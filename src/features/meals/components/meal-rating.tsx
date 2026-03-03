@@ -79,11 +79,9 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
           });
 
       if (!res.ok) {
-        // API returned an error — revert optimistic update
         await fetchRating();
       }
     } catch {
-      // Network error — revert optimistic update
       await fetchRating();
     } finally {
       setIsSubmitting(false);
@@ -134,15 +132,12 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
     </Button>
   );
 
-  // Determine tooltip message
   const tooltipMessage = !user
     ? t("loginToRate")
     : !isToday
       ? t("onlyTodayCanRate")
       : null;
 
-  // Show tooltip when buttons are disabled (not logged in or not today)
-  // Wrap in span so hover works even when button has pointer-events: none
   if (tooltipMessage) {
     return (
       <div className="flex justify-center items-center gap-2 border-t border-border/40 mt-2 pt-2">
@@ -170,7 +165,6 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
     );
   }
 
-  // Today + logged in: interactive, no tooltip
   return (
     <div className="flex justify-center items-center gap-2 border-t border-border/40 mt-2 pt-2">
       {likeButton}

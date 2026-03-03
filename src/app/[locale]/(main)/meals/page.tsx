@@ -27,7 +27,6 @@ export async function generateMetadata({ params }: MealsPageProps) {
   return { title: t("title") };
 }
 
-// Map DB row to typed meal object
 function toTypedMeal(m: { id: string; date: string; items: unknown; calories: number | null }) {
   return { id: m.id, date: m.date, items: m.items as MealItem[], calories: m.calories };
 }
@@ -47,7 +46,6 @@ export default async function MealsPage({
       ? viewParam
       : "monthly";
 
-  // Parse month parameter
   let year = now.getFullYear();
   let month = now.getMonth() + 1;
   if (monthParam) {
@@ -58,19 +56,16 @@ export default async function MealsPage({
     }
   }
 
-  // Clamp to valid range
   const clamped = clampMonth(year, month);
   year = clamped.year;
   month = clamped.month;
 
-  // Parse day for daily/weekly views
   let day = now.getDate();
   if (dayParam) {
     const parsed = parseInt(dayParam, 10);
     if (parsed >= 1 && parsed <= 31) day = parsed;
   }
 
-  // Clamp day if we're in the clamped month and the day exceeds current date
   if (year === now.getFullYear() && month === now.getMonth() + 1 && day > now.getDate()) {
     day = now.getDate();
   }
@@ -106,7 +101,6 @@ export default async function MealsPage({
     );
   }
 
-  // Monthly view
   const { from, to } = getMonthRange(year, month);
   const mealData = await getMealsByDateRange(from, to);
 

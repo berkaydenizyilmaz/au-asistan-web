@@ -22,7 +22,6 @@ const TURKISH_MONTHS: Record<string, string> = {
 
 const CATEGORIES: MealCategory[] = ["soup", "main", "side", "dessert"];
 
-// Extract month (MM) and year (YYYY) from the table header
 function parseMonthYear($: cheerio.CheerioAPI): { month: string; year: string } | null {
   let result: { month: string; year: string } | null = null;
 
@@ -35,7 +34,7 @@ function parseMonthYear($: cheerio.CheerioAPI): { month: string; year: string } 
         const yearMatch = text.match(/(\d{4})/);
         if (yearMatch) {
           result = { month: monthNum, year: yearMatch[1] };
-          return false; // break .each()
+          return false;
         }
       }
     }
@@ -44,7 +43,6 @@ function parseMonthYear($: cheerio.CheerioAPI): { month: string; year: string } 
   return result;
 }
 
-// Parse a single table row into a ParsedMeal
 function parseRow(
   $: cheerio.CheerioAPI,
   row: Element,
@@ -54,7 +52,6 @@ function parseRow(
   const cells = $(row).find("td");
   if (cells.length < 6) return null;
 
-  // Parse date — extract day number
   const dateText = cells.eq(0).text().trim();
   const dayMatch = dateText.match(/^(\d{1,2})/);
   if (!dayMatch) return null;
@@ -62,7 +59,6 @@ function parseRow(
   const day = dayMatch[1].padStart(2, "0");
   const dateStr = `${year}-${month}-${day}`;
 
-  // Parse food items (cells 1-4)
   const items: MealItem[] = [];
   for (let i = 0; i < 4; i++) {
     const name = cells.eq(i + 1).text().trim();
@@ -71,10 +67,8 @@ function parseRow(
     }
   }
 
-  // Skip empty days
   if (items.length === 0) return null;
 
-  // Parse calories — "1208 Kalori" → 1208
   let calories: number | null = null;
   const calMatch = cells.eq(5).text().match(/(\d+)\s*Kalori/i);
   if (calMatch) {
@@ -84,7 +78,6 @@ function parseRow(
   return { date: dateStr, items, calories };
 }
 
-// Fetch and parse the monthly meal list from the university website
 export async function scrapeMeals(): Promise<ParsedMeal[]> {
   const response = await fetch(MEAL_URL, {
     headers: {

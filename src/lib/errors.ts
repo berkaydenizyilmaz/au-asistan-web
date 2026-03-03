@@ -1,6 +1,3 @@
-// Custom error classes for DAL layer.
-// DAL functions throw these; API routes catch via handleError().
-
 export class ValidationError extends Error {
   name = "ValidationError" as const;
   constructor(

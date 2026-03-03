@@ -25,7 +25,6 @@ interface MealNavigationProps {
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VIEW_MODES: ViewMode[] = ["daily", "weekly", "monthly"];
 
-// Get the target date after stepping in a direction based on view mode
 function getSteppedDate(view: ViewMode, year: number, month: number, day: number, direction: 1 | -1) {
   if (view === "daily") {
     const d = new Date(year, month - 1, day + direction);
@@ -94,7 +93,6 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      {/* View mode toggle */}
       <div className="flex gap-1 rounded-full bg-muted p-1">
         {VIEW_MODES.map((v) => (
           <Button
@@ -109,7 +107,6 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
         ))}
       </div>
 
-      {/* Date navigation */}
       <div className="flex items-center gap-2">
         <Button
           variant="outline"

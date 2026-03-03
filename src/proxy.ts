@@ -7,10 +7,8 @@ import { env } from "./lib/env";
 const intlMiddleware = createIntlMiddleware(routing);
 
 export default async function proxy(request: NextRequest) {
-  // Run next-intl middleware for locale routing
   const response = intlMiddleware(request);
 
-  // Refresh Supabase auth session on the same response
   const supabase = createServerClient(
     env.supabaseUrl,
     env.supabaseAnonKey,

@@ -8,7 +8,6 @@ import type { ParsedMeal } from "../types";
 import { uuidString, mealRatingInputSchema } from "./validators";
 import { mealExists } from "./queries";
 
-// Verify auth and return userId — used by mutation functions
 async function requireAuth(): Promise<string> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -16,7 +15,6 @@ async function requireAuth(): Promise<string> {
   return user.id;
 }
 
-// Upsert a meal rating (auth required)
 export async function upsertMealRating(mealId: string, rating: unknown) {
   const userId = await requireAuth();
 
@@ -55,7 +53,6 @@ export async function upsertMealRating(mealId: string, rating: unknown) {
   }
 }
 
-// Delete a user's rating (auth required)
 export async function deleteMealRating(mealId: string) {
   const userId = await requireAuth();
 
@@ -70,7 +67,6 @@ export async function deleteMealRating(mealId: string) {
     );
 }
 
-// Bulk upsert scraped meals (called by cron job, no auth — secret key checked in route)
 export async function upsertMeals(parsedMeals: ParsedMeal[]) {
   if (parsedMeals.length === 0) return;
 

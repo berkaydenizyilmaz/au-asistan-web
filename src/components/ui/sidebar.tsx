@@ -58,7 +58,6 @@ function SidebarProvider({
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
-  // Desktop collapse state (cookie-persisted)
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
   const setOpen = React.useCallback(
@@ -70,16 +69,13 @@ function SidebarProvider({
         _setOpen(openState)
       }
 
-      // Persist sidebar state to cookie
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
     },
     [setOpenProp, open]
   )
 
-  // Mobile overlay state (always starts closed, never persisted)
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
-  // Toggle: uses matchMedia at call-time (event handler only, no hydration impact)
   const toggleSidebar = React.useCallback(() => {
     if (typeof window !== "undefined" && window.matchMedia(MOBILE_BREAKPOINT).matches) {
       setMobileOpen((prev) => !prev)
@@ -92,7 +88,6 @@ function SidebarProvider({
     setMobileOpen(false)
   }, [])
 
-  // Reset mobileOpen when viewport crosses to desktop
   React.useEffect(() => {
     const mql = window.matchMedia(MOBILE_BREAKPOINT)
     const onChange = (e: MediaQueryListEvent) => {
@@ -102,7 +97,6 @@ function SidebarProvider({
     return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  // Keyboard shortcut to toggle sidebar
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (

@@ -30,7 +30,6 @@ export function MealList({ meals, view }: MealListProps) {
 
   const todayStr = getTodayStr();
 
-  // Daily: compact centered card
   if (view === "daily") {
     const meal = meals[0];
     const isToday = meal.date === todayStr;
@@ -52,7 +51,6 @@ export function MealList({ meals, view }: MealListProps) {
     );
   }
 
-  // Weekly: 2 columns on large screens
   if (view === "weekly") {
     return (
       <div className="grid gap-3 sm:grid-cols-2 max-w-3xl mx-auto">
@@ -74,7 +72,6 @@ export function MealList({ meals, view }: MealListProps) {
     );
   }
 
-  // Monthly: responsive grid — larger min column width for uniform card sizes
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {meals.map((meal) => {

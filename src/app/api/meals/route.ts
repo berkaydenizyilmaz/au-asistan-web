@@ -8,13 +8,11 @@ export async function GET(request: Request) {
     const fromParam = searchParams.get("from");
     const toParam = searchParams.get("to");
 
-    // Default to current month if no range provided
     const now = new Date();
     const currentRange = getMonthRange(now.getFullYear(), now.getMonth() + 1);
     const from = fromParam ?? currentRange.from;
     const to = toParam ?? currentRange.to;
 
-    // Validation is handled inside getMealsByDateRange (Zod)
     const result = await getMealsByDateRange(from, to);
     return successResponse(result);
   } catch (error) {

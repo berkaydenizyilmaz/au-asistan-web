@@ -10,7 +10,6 @@ import {
   formatZodIssues,
 } from "./validators";
 
-// Fetch meals within a date range, ordered by date
 export async function getMealsByDateRange(from: string, to: string) {
   const parsed = dateRangeSchema.safeParse({ from, to });
   if (!parsed.success) {
@@ -25,7 +24,6 @@ export async function getMealsByDateRange(from: string, to: string) {
     .orderBy(asc(meals.date));
 }
 
-// Fetch a single meal by exact date, returns null if not found
 export async function getMealByDate(date: string) {
   const parsed = dateString.safeParse(date);
   if (!parsed.success) {
@@ -41,7 +39,6 @@ export async function getMealByDate(date: string) {
   return result[0] ?? null;
 }
 
-// Check if a meal exists by ID
 export async function mealExists(id: string) {
   const parsed = uuidString.safeParse(id);
   if (!parsed.success) {
@@ -57,7 +54,6 @@ export async function mealExists(id: string) {
   return result.length > 0;
 }
 
-// Get aggregated rating counts and optionally the current user's rating
 export async function getMealRatingSummary(
   mealId: string,
   userId?: string,
