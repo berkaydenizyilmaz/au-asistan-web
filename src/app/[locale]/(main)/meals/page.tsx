@@ -1,8 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { and, asc, eq, gte, lte } from "drizzle-orm";
 
-import { createDrizzleSupabaseClient } from "@/lib/db";
-import { meals } from "@/lib/db/schema/content";
 import { MealList } from "@/features/meals/components/meal-list";
 import { MealNavigation } from "@/features/meals/components/meal-navigation";
 import type { ViewMode } from "@/features/meals/components/meal-navigation";
@@ -14,6 +11,10 @@ import {
   getMonthRange,
   clampMonth,
 } from "@/features/meals/lib/date-utils";
+import {
+  getMealByDate,
+  getMealsByDateRange,
+} from "@/features/meals/lib/queries";
 
 interface MealsPageProps {
   params: Promise<{ locale: string }>;
@@ -24,6 +25,11 @@ export async function generateMetadata({ params }: MealsPageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meals" });
   return { title: t("title") };
+}
+
+// Map DB row to typed meal object
+function toTypedMeal(m: { id: string; date: string; items: unknown; calories: number | null }) {
+  return { id: m.id, date: m.date, items: m.items as MealItem[], calories: m.calories };
 }
 
 export default async function MealsPage({
@@ -69,22 +75,10 @@ export default async function MealsPage({
     day = now.getDate();
   }
 
-  const db = await createDrizzleSupabaseClient();
-
   if (view === "daily") {
     const dateStr = `${formatMonth(year, month)}-${String(day).padStart(2, "0")}`;
-    const mealData = await db.admin
-      .select()
-      .from(meals)
-      .where(eq(meals.date, dateStr))
-      .limit(1);
-
-    const typedMeals = mealData.map((m) => ({
-      id: m.id,
-      date: m.date,
-      items: m.items as MealItem[],
-      calories: m.calories,
-    }));
+    const meal = await getMealByDate(dateStr);
+    const typedMeals = meal ? [toTypedMeal(meal)] : [];
 
     return (
       <div className="space-y-6">
@@ -102,48 +96,24 @@ export default async function MealsPage({
 
     const from = formatDate(monday);
     const to = formatDate(friday);
-
-    const mealData = await db.admin
-      .select()
-      .from(meals)
-      .where(and(gte(meals.date, from), lte(meals.date, to)))
-      .orderBy(asc(meals.date));
-
-    const typedMeals = mealData.map((m) => ({
-      id: m.id,
-      date: m.date,
-      items: m.items as MealItem[],
-      calories: m.calories,
-    }));
+    const mealData = await getMealsByDateRange(from, to);
 
     return (
       <div className="space-y-6">
         <MealNavigation year={year} month={month} day={day} view={view} />
-        <MealList meals={typedMeals} view={view} />
+        <MealList meals={mealData.map(toTypedMeal)} view={view} />
       </div>
     );
   }
 
   // Monthly view
   const { from, to } = getMonthRange(year, month);
-
-  const mealData = await db.admin
-    .select()
-    .from(meals)
-    .where(and(gte(meals.date, from), lte(meals.date, to)))
-    .orderBy(asc(meals.date));
-
-  const typedMeals = mealData.map((m) => ({
-    id: m.id,
-    date: m.date,
-    items: m.items as MealItem[],
-    calories: m.calories,
-  }));
+  const mealData = await getMealsByDateRange(from, to);
 
   return (
     <div className="space-y-6">
       <MealNavigation year={year} month={month} day={day} view={view} />
-      <MealList meals={typedMeals} view={view} />
+      <MealList meals={mealData.map(toTypedMeal)} view={view} />
     </div>
   );
 }

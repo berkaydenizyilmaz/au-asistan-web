@@ -1,9 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
-
 import { successResponse, errorResponse } from "@/lib/api";
-import { createDrizzleSupabaseClient } from "@/lib/db";
-import { meals, mealRatings } from "@/lib/db/schema/content";
 import { createClient } from "@/lib/supabase/server";
+import { mealExists, getMealRatingSummary } from "@/features/meals/lib/queries";
+import { upsertMealRating, deleteMealRating } from "@/features/meals/lib/mutations";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -13,54 +11,18 @@ export async function GET(request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    const db = await createDrizzleSupabaseClient();
-
-    // Verify meal exists
-    const meal = await db.admin
-      .select({ id: meals.id })
-      .from(meals)
-      .where(eq(meals.id, id))
-      .limit(1);
-
-    if (meal.length === 0) {
+    if (!(await mealExists(id))) {
       return errorResponse("NOT_FOUND", "Meal not found", 404);
     }
 
-    // Get aggregated rating counts
-    const counts = await db.admin
-      .select({
-        likes: sql<number>`count(*) filter (where ${mealRatings.rating} = 'like')`,
-        dislikes: sql<number>`count(*) filter (where ${mealRatings.rating} = 'dislike')`,
-      })
-      .from(mealRatings)
-      .where(eq(mealRatings.mealId, id));
-
-    // Check if current user has rated
+    // Check if current user is authenticated
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    let userRating: string | null = null;
-    if (user) {
-      const userRate = await db.admin
-        .select({ rating: mealRatings.rating })
-        .from(mealRatings)
-        .where(
-          and(eq(mealRatings.mealId, id), eq(mealRatings.userId, user.id))
-        )
-        .limit(1);
-
-      if (userRate.length > 0) {
-        userRating = userRate[0].rating;
-      }
-    }
-
-    return successResponse({
-      likes: Number(counts[0]?.likes ?? 0),
-      dislikes: Number(counts[0]?.dislikes ?? 0),
-      userRating,
-    });
+    const summary = await getMealRatingSummary(id, user?.id);
+    return successResponse(summary);
   } catch (error) {
     return errorResponse(
       "FETCH_FAILED",
@@ -94,44 +56,11 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   try {
-    const db = await createDrizzleSupabaseClient();
-
-    // Verify meal exists
-    const meal = await db.admin
-      .select({ id: meals.id })
-      .from(meals)
-      .where(eq(meals.id, id))
-      .limit(1);
-
-    if (meal.length === 0) {
+    if (!(await mealExists(id))) {
       return errorResponse("NOT_FOUND", "Meal not found", 404);
     }
 
-    // Upsert rating — auth already verified above via getUser()
-    const existing = await db.admin
-      .select({ id: mealRatings.id })
-      .from(mealRatings)
-      .where(
-        and(
-          eq(mealRatings.mealId, id),
-          eq(mealRatings.userId, user.id)
-        )
-      )
-      .limit(1);
-
-    if (existing.length > 0) {
-      await db.admin
-        .update(mealRatings)
-        .set({ rating })
-        .where(eq(mealRatings.id, existing[0].id));
-    } else {
-      await db.admin.insert(mealRatings).values({
-        mealId: id,
-        userId: user.id,
-        rating,
-      });
-    }
-
+    await upsertMealRating(id, user.id, rating);
     return successResponse({ rating });
   } catch (error) {
     return errorResponse(
@@ -155,17 +84,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   try {
-    const db = await createDrizzleSupabaseClient();
-
-    await db.admin
-      .delete(mealRatings)
-      .where(
-        and(
-          eq(mealRatings.mealId, id),
-          eq(mealRatings.userId, user.id)
-        )
-      );
-
+    await deleteMealRating(id, user.id);
     return successResponse({ deleted: true });
   } catch (error) {
     return errorResponse(

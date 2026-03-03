@@ -1,9 +1,6 @@
-import { and, asc, gte, lte } from "drizzle-orm";
-
 import { successResponse, errorResponse } from "@/lib/api";
-import { createDrizzleSupabaseClient } from "@/lib/db";
-import { meals } from "@/lib/db/schema/content";
 import { getMonthRange } from "@/features/meals/lib/date-utils";
+import { getMealsByDateRange } from "@/features/meals/lib/queries";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -27,13 +24,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const db = await createDrizzleSupabaseClient();
-    const result = await db.admin
-      .select()
-      .from(meals)
-      .where(and(gte(meals.date, defaultFrom), lte(meals.date, defaultTo)))
-      .orderBy(asc(meals.date));
-
+    const result = await getMealsByDateRange(defaultFrom, defaultTo);
     return successResponse(result);
   } catch (error) {
     return errorResponse(
