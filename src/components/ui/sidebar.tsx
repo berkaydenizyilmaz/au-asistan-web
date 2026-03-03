@@ -92,6 +92,16 @@ function SidebarProvider({
     setMobileOpen(false)
   }, [])
 
+  // Reset mobileOpen when viewport crosses to desktop
+  React.useEffect(() => {
+    const mql = window.matchMedia(MOBILE_BREAKPOINT)
+    const onChange = (e: MediaQueryListEvent) => {
+      if (!e.matches) setMobileOpen(false)
+    }
+    mql.addEventListener("change", onChange)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
   // Keyboard shortcut to toggle sidebar
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
