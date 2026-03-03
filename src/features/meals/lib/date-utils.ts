@@ -1,6 +1,6 @@
 // Earliest available meal data
-export const MEALS_MIN_YEAR = 2025;
-export const MEALS_MIN_MONTH = 9;
+export const MEALS_MIN_YEAR = 2026;
+export const MEALS_MIN_MONTH = 1;
 
 // Format a Date object as YYYY-MM-DD
 export function formatDate(d: Date): string {
