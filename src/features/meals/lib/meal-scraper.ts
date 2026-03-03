@@ -44,7 +44,6 @@ function parseMonthYear($: cheerio.CheerioAPI): { month: string; year: string } 
   return result;
 }
 
-
 // Parse a single table row into a ParsedMeal
 function parseRow(
   $: cheerio.CheerioAPI,

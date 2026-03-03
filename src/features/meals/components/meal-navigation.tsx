@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -19,9 +20,38 @@ interface MealNavigationProps {
   view: ViewMode;
 }
 
-// Earliest data we'd reasonably have (current academic year start)
 const MIN_YEAR = 2026;
 const MIN_MONTH = 1;
+
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const VIEW_MODES: ViewMode[] = ["daily", "weekly", "monthly"];
+
+// Skip weekends in a given direction (+1 forward, -1 backward)
+function skipWeekends(d: Date, direction: 1 | -1): Date {
+  while (d.getDay() === 0 || d.getDay() === 6) {
+    d.setDate(d.getDate() + direction);
+  }
+  return d;
+}
+
+// Get the target date after stepping in a direction based on view mode
+function getSteppedDate(view: ViewMode, year: number, month: number, day: number, direction: 1 | -1) {
+  if (view === "daily") {
+    const d = new Date(year, month - 1, day + direction);
+    skipWeekends(d, direction);
+    return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+  }
+  if (view === "weekly") {
+    const d = new Date(year, month - 1, day + direction * 7);
+    return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+  }
+  // monthly
+  let m = month + direction;
+  let y = year;
+  if (m < 1) { m = 12; y--; }
+  if (m > 12) { m = 1; y++; }
+  return { year: y, month: m, day };
+}
 
 function isBeforeMin(year: number, month: number) {
   return year < MIN_YEAR || (year === MIN_YEAR && month < MIN_MONTH);
@@ -29,13 +59,9 @@ function isBeforeMin(year: number, month: number) {
 
 function isAfterNow(year: number, month: number, day?: number) {
   const now = new Date();
-  const nowYear = now.getFullYear();
-  const nowMonth = now.getMonth() + 1;
-  const nowDay = now.getDate();
-
-  if (year > nowYear) return true;
-  if (year === nowYear && month > nowMonth) return true;
-  if (day && year === nowYear && month === nowMonth && day > nowDay) return true;
+  if (year > now.getFullYear()) return true;
+  if (year === now.getFullYear() && month > now.getMonth() + 1) return true;
+  if (day && year === now.getFullYear() && month === now.getMonth() + 1 && day > now.getDate()) return true;
   return false;
 }
 
@@ -44,133 +70,34 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
   const router = useRouter();
   const pathname = usePathname();
 
-  function buildUrl(params: { view?: ViewMode; year?: number; month?: number; day?: number }) {
-    const v = params.view ?? view;
-    const y = params.year ?? year;
-    const m = params.month ?? month;
-    const d = params.day ?? day;
-
-    const now = new Date();
-    const isNow =
-      y === now.getFullYear() &&
-      m === now.getMonth() + 1 &&
-      (v !== "daily" || d === now.getDate());
-
-    if (isNow && v === "monthly") return pathname;
-
-    const parts = [`view=${v}`, `month=${y}-${String(m).padStart(2, "0")}`];
-    if (v === "daily") parts.push(`day=${d}`);
-    return `${pathname}?${parts.join("&")}`;
+  function buildUrl(v: ViewMode, y: number, m: number, d: number) {
+    const params = new URLSearchParams();
+    params.set("view", v);
+    params.set("month", `${y}-${String(m).padStart(2, "0")}`);
+    if (v === "daily") params.set("day", String(d));
+    return `${pathname}?${params.toString()}`;
   }
 
-  function navigatePrev() {
-    if (view === "daily") {
-      // Go to previous day (skip weekends)
-      const d = new Date(year, month - 1, day);
-      d.setDate(d.getDate() - 1);
-      // Skip weekends backward
-      while (d.getDay() === 0 || d.getDay() === 6) {
-        d.setDate(d.getDate() - 1);
-      }
-      router.push(buildUrl({
-        year: d.getFullYear(),
-        month: d.getMonth() + 1,
-        day: d.getDate(),
-      }));
-    } else if (view === "weekly") {
-      const d = new Date(year, month - 1, day);
-      d.setDate(d.getDate() - 7);
-      router.push(buildUrl({
-        year: d.getFullYear(),
-        month: d.getMonth() + 1,
-        day: d.getDate(),
-      }));
-    } else {
-      let newMonth = month - 1;
-      let newYear = year;
-      if (newMonth < 1) {
-        newMonth = 12;
-        newYear--;
-      }
-      router.push(buildUrl({ year: newYear, month: newMonth }));
-    }
+  function navigate(direction: 1 | -1) {
+    const target = getSteppedDate(view, year, month, day, direction);
+    router.push(buildUrl(view, target.year, target.month, target.day));
   }
 
-  function navigateNext() {
-    if (view === "daily") {
-      const d = new Date(year, month - 1, day);
-      d.setDate(d.getDate() + 1);
-      while (d.getDay() === 0 || d.getDay() === 6) {
-        d.setDate(d.getDate() + 1);
-      }
-      router.push(buildUrl({
-        year: d.getFullYear(),
-        month: d.getMonth() + 1,
-        day: d.getDate(),
-      }));
-    } else if (view === "weekly") {
-      const d = new Date(year, month - 1, day);
-      d.setDate(d.getDate() + 7);
-      router.push(buildUrl({
-        year: d.getFullYear(),
-        month: d.getMonth() + 1,
-        day: d.getDate(),
-      }));
-    } else {
-      let newMonth = month + 1;
-      let newYear = year;
-      if (newMonth > 12) {
-        newMonth = 1;
-        newYear++;
-      }
-      router.push(buildUrl({ year: newYear, month: newMonth }));
-    }
-  }
+  const prev = useMemo(() => getSteppedDate(view, year, month, day, -1), [view, year, month, day]);
+  const next = useMemo(() => getSteppedDate(view, year, month, day, 1), [view, year, month, day]);
 
-  // Compute disabled states
-  const prevDisabled = (() => {
-    if (view === "monthly") return isBeforeMin(year, month - 1 < 1 ? 12 : month - 1);
-    if (view === "daily") {
-      const d = new Date(year, month - 1, day);
-      d.setDate(d.getDate() - 1);
-      while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
-      return isBeforeMin(d.getFullYear(), d.getMonth() + 1);
-    }
-    // weekly
-    const d = new Date(year, month - 1, day);
-    d.setDate(d.getDate() - 7);
-    return isBeforeMin(d.getFullYear(), d.getMonth() + 1);
-  })();
+  const prevDisabled = isBeforeMin(prev.year, prev.month);
+  const nextDisabled = view === "daily"
+    ? isAfterNow(next.year, next.month, next.day)
+    : isAfterNow(next.year, next.month);
 
-  const nextDisabled = (() => {
-    if (view === "monthly") {
-      const nm = month + 1 > 12 ? 1 : month + 1;
-      const ny = month + 1 > 12 ? year + 1 : year;
-      return isAfterNow(ny, nm);
-    }
+  const label = useMemo(() => {
     if (view === "daily") {
-      const d = new Date(year, month - 1, day);
-      d.setDate(d.getDate() + 1);
-      while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-      return isAfterNow(d.getFullYear(), d.getMonth() + 1, d.getDate());
-    }
-    // weekly
-    const d = new Date(year, month - 1, day);
-    d.setDate(d.getDate() + 7);
-    // Disable if the Monday of next week is after now
-    return isAfterNow(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  })();
-
-  // Build label
-  const label = (() => {
-    if (view === "daily") {
-      const weekdayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
       const dateObj = new Date(year, month - 1, day);
-      const wd = t(`weekdaysFull.${weekdayKeys[dateObj.getDay()]}`);
+      const wd = t(`weekdaysFull.${WEEKDAY_KEYS[dateObj.getDay()]}`);
       return `${day} ${t(`months.${month}`)} – ${wd}`;
     }
     if (view === "weekly") {
-      // Find Monday of the week containing `day`
       const dateObj = new Date(year, month - 1, day);
       const dayOfWeek = dateObj.getDay();
       const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -184,19 +111,19 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
       return t("weekLabel", { start: startStr, end: endStr });
     }
     return `${t(`months.${month}`)} ${year}`;
-  })();
+  }, [view, year, month, day, t]);
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* View mode toggle */}
       <div className="flex gap-1 rounded-full bg-muted p-1">
-        {(["daily", "weekly", "monthly"] as const).map((v) => (
+        {VIEW_MODES.map((v) => (
           <Button
             key={v}
             variant={view === v ? "default" : "ghost"}
             size="sm"
             className="rounded-full text-xs px-3 h-7"
-            onClick={() => router.push(buildUrl({ view: v }))}
+            onClick={() => router.push(buildUrl(v, year, month, day))}
           >
             {t(`view${v.charAt(0).toUpperCase() + v.slice(1)}` as "viewDaily" | "viewWeekly" | "viewMonthly")}
           </Button>
@@ -208,7 +135,7 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
         <Button
           variant="outline"
           size="icon-sm"
-          onClick={navigatePrev}
+          onClick={() => navigate(-1)}
           disabled={prevDisabled}
           aria-label={t("previous")}
         >
@@ -220,7 +147,7 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
         <Button
           variant="outline"
           size="icon-sm"
-          onClick={navigateNext}
+          onClick={() => navigate(1)}
           disabled={nextDisabled}
           aria-label={t("next")}
         >
