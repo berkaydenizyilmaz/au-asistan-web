@@ -21,7 +21,7 @@ interface MealNavigationProps {
 
 // Earliest data we'd reasonably have (current academic year start)
 const MIN_YEAR = 2025;
-const MIN_MONTH = 9; // September 2025
+const MIN_MONTH = 1;
 
 function isBeforeMin(year: number, month: number) {
   return year < MIN_YEAR || (year === MIN_YEAR && month < MIN_MONTH);
