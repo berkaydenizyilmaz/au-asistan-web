@@ -19,9 +19,7 @@ const TURKISH_MONTHS: Record<string, string> = {
 
 const CATEGORIES: MealCategory[] = ["soup", "main", "side", "dessert"];
 
-/**
- * Decode HTML entities (hex &#xHEX; and decimal &#DEC;)
- */
+// Decode HTML entities (hex &#xHEX; and decimal &#DEC;)
 function decodeHtmlEntities(text: string): string {
   return text
     .replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) =>
@@ -37,17 +35,13 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
-/**
- * Strip HTML tags from a string
- */
+// Strip HTML tags from a string
 function stripTags(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
-/**
- * Extract month (MM) and year (YYYY) from the table header.
- * Looks for pattern like "Mart 2026 YEMEK LİSTESİ"
- */
+// Extract month (MM) and year (YYYY) from the table header.
+// Looks for pattern like "Mart 2026 YEMEK LİSTESİ"
 function parseMonthYear(html: string): { month: string; year: string } | null {
   // Match the header row containing "YEMEK LİSTESİ"
   const headerMatch = html.match(
@@ -70,10 +64,8 @@ function parseMonthYear(html: string): { month: string; year: string } | null {
   return null;
 }
 
-/**
- * Parse a single table row into a ParsedMeal.
- * Expected: 6 cells — Date | Soup | Main | Side | Dessert | Calories
- */
+// Parse a single table row into a ParsedMeal.
+// Expected: 6 cells — Date | Soup | Main | Side | Dessert | Calories
 function parseRow(
   row: string,
   month: string,
@@ -114,9 +106,7 @@ function parseRow(
   return { date: dateStr, items, calories };
 }
 
-/**
- * Fetch and parse the monthly meal list from the university website.
- */
+// Fetch and parse the monthly meal list from the university website.
 export async function scrapeMeals(): Promise<ParsedMeal[]> {
   const response = await fetch(MEAL_URL, {
     headers: {
