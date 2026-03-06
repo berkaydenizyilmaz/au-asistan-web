@@ -3,7 +3,6 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { MealList } from "@/features/meals/components/meal-list";
 import { MealNavigation } from "@/features/meals/components/meal-navigation";
 import type { ViewMode } from "@/features/meals/components/meal-navigation";
-import type { MealItem } from "@/features/meals/types";
 import {
   formatDate,
   formatMonth,
@@ -25,10 +24,6 @@ export async function generateMetadata({ params }: MealsPageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meals" });
   return { title: t("title") };
-}
-
-function toTypedMeal(m: { id: string; date: string; items: unknown; calories: number | null }) {
-  return { id: m.id, date: m.date, items: m.items as MealItem[], calories: m.calories };
 }
 
 export default async function MealsPage({
@@ -73,7 +68,7 @@ export default async function MealsPage({
   if (view === "daily") {
     const dateStr = `${formatMonth(year, month)}-${String(day).padStart(2, "0")}`;
     const meal = await getMealByDate(dateStr);
-    const typedMeals = meal ? [toTypedMeal(meal)] : [];
+    const typedMeals = meal ? [meal] : [];
 
     return (
       <div className="space-y-6">
@@ -96,7 +91,7 @@ export default async function MealsPage({
     return (
       <div className="space-y-6">
         <MealNavigation year={year} month={month} day={day} view={view} />
-        <MealList meals={mealData.map(toTypedMeal)} view={view} />
+        <MealList meals={mealData} view={view} />
       </div>
     );
   }
@@ -107,7 +102,7 @@ export default async function MealsPage({
   return (
     <div className="space-y-6">
       <MealNavigation year={year} month={month} day={day} view={view} />
-      <MealList meals={mealData.map(toTypedMeal)} view={view} />
+      <MealList meals={mealData} view={view} />
     </div>
   );
 }

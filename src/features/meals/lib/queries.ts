@@ -1,14 +1,21 @@
+import "server-only";
+
 import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { meals, mealRatings } from "@/lib/db/schema/content";
 import { ValidationError } from "@/lib/errors";
+import type { MealDTO, MealItem } from "../types";
 import {
   dateRangeSchema,
   dateString,
   uuidString,
   formatZodIssues,
 } from "./validators";
+
+function toMealDTO(row: { id: string; date: string; items: unknown; calories: number | null }): MealDTO {
+  return { id: row.id, date: row.date, items: row.items as MealItem[], calories: row.calories };
+}
 
 export async function getMealsByDateRange(from: string, to: string) {
   const parsed = dateRangeSchema.safeParse({ from, to });
@@ -17,11 +24,12 @@ export async function getMealsByDateRange(from: string, to: string) {
   }
 
   const db = await createDrizzleSupabaseClient();
-  return db.admin
+  const rows = await db.admin
     .select()
     .from(meals)
     .where(and(gte(meals.date, parsed.data.from), lte(meals.date, parsed.data.to)))
     .orderBy(asc(meals.date));
+  return rows.map(toMealDTO);
 }
 
 export async function getMealByDate(date: string) {
@@ -36,7 +44,7 @@ export async function getMealByDate(date: string) {
     .from(meals)
     .where(eq(meals.date, parsed.data))
     .limit(1);
-  return result[0] ?? null;
+  return result[0] ? toMealDTO(result[0]) : null;
 }
 
 export async function mealExists(id: string) {

@@ -10,3 +10,10 @@ export interface ParsedMeal {
   items: MealItem[];
   calories: number | null;
 }
+
+export interface MealDTO {
+  id: string;
+  date: string;
+  items: MealItem[];
+  calories: number | null;
+}
