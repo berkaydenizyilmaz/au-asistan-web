@@ -33,24 +33,26 @@ export async function upsertMealRating(mealId: string, rating: unknown) {
   }
 
   const db = await createDrizzleSupabaseClient();
-  const existing = await db.admin
-    .select({ id: mealRatings.id })
-    .from(mealRatings)
-    .where(
-      and(eq(mealRatings.mealId, mealId), eq(mealRatings.userId, userId)),
-    )
-    .limit(1);
+  await db.rls(async (tx) => {
+    const existing = await tx
+      .select({ id: mealRatings.id })
+      .from(mealRatings)
+      .where(
+        and(eq(mealRatings.mealId, mealId), eq(mealRatings.userId, userId)),
+      )
+      .limit(1);
 
-  if (existing.length > 0) {
-    await db.admin
-      .update(mealRatings)
-      .set({ rating: parsedRating.data.rating })
-      .where(eq(mealRatings.id, existing[0].id));
-  } else {
-    await db.admin
-      .insert(mealRatings)
-      .values({ mealId, userId, rating: parsedRating.data.rating });
-  }
+    if (existing.length > 0) {
+      await tx
+        .update(mealRatings)
+        .set({ rating: parsedRating.data.rating })
+        .where(eq(mealRatings.id, existing[0].id));
+    } else {
+      await tx
+        .insert(mealRatings)
+        .values({ mealId, userId, rating: parsedRating.data.rating });
+    }
+  });
 }
 
 export async function deleteMealRating(mealId: string) {
@@ -60,11 +62,13 @@ export async function deleteMealRating(mealId: string) {
   if (!parsedId.success) throw new ValidationError("Invalid meal ID");
 
   const db = await createDrizzleSupabaseClient();
-  await db.admin
-    .delete(mealRatings)
-    .where(
-      and(eq(mealRatings.mealId, mealId), eq(mealRatings.userId, userId)),
-    );
+  await db.rls((tx) =>
+    tx
+      .delete(mealRatings)
+      .where(
+        and(eq(mealRatings.mealId, mealId), eq(mealRatings.userId, userId)),
+      ),
+  );
 }
 
 export async function upsertMeals(parsedMeals: ParsedMeal[]) {
