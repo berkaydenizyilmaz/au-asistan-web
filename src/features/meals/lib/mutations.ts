@@ -4,21 +4,14 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { meals, mealRatings } from "@/lib/db/schema/content";
-import { createClient } from "@/lib/supabase/server";
-import { UnauthorizedError, NotFoundError, ValidationError } from "@/lib/errors";
+import { requireUserId } from "@/lib/auth/server";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import type { ParsedMeal } from "../types";
 import { uuidString, mealRatingInputSchema } from "./validators";
 import { mealExists } from "./queries";
 
-async function requireAuth(): Promise<string> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  return user.id;
-}
-
 export async function upsertMealRating(mealId: string, rating: unknown) {
-  const userId = await requireAuth();
+  const userId = await requireUserId();
 
   const parsedId = uuidString.safeParse(mealId);
   if (!parsedId.success) throw new ValidationError("Invalid meal ID");
@@ -58,7 +51,7 @@ export async function upsertMealRating(mealId: string, rating: unknown) {
 }
 
 export async function deleteMealRating(mealId: string) {
-  const userId = await requireAuth();
+  const userId = await requireUserId();
 
   const parsedId = uuidString.safeParse(mealId);
   if (!parsedId.success) throw new ValidationError("Invalid meal ID");

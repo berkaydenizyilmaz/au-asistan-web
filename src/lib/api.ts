@@ -1,8 +1,9 @@
-import { ValidationError, UnauthorizedError, NotFoundError } from "./errors";
+import { AppError } from "./errors";
 
 export interface ApiError {
   code: string;
   message: string;
+  details?: unknown;
 }
 
 export type ApiResponse<T> =
@@ -22,20 +23,30 @@ export function errorResponse(code: string, message: string, status = 400) {
   );
 }
 
-// Convert DAL errors to HTTP responses
 export function handleError(error: unknown) {
-  if (error instanceof ValidationError) {
-    return errorResponse("VALIDATION_ERROR", error.message, 400);
+  if (error instanceof AppError) {
+    return Response.json(
+      {
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+          ...(error.details != null && { details: error.details }),
+        },
+      } satisfies ApiResponse<never>,
+      { status: error.statusCode },
+    );
   }
-  if (error instanceof UnauthorizedError) {
-    return errorResponse("UNAUTHORIZED", error.message, 401);
-  }
-  if (error instanceof NotFoundError) {
-    return errorResponse("NOT_FOUND", error.message, 404);
-  }
-  return errorResponse(
-    "INTERNAL_ERROR",
-    error instanceof Error ? error.message : "Unknown error",
-    500,
+
+  console.error("[UNHANDLED]", error);
+  return Response.json(
+    {
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "An unexpected error occurred",
+      },
+    } satisfies ApiResponse<never>,
+    { status: 500 },
   );
 }
