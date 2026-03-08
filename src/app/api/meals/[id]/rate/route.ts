@@ -1,6 +1,6 @@
-import { successResponse, handleError } from "@/lib/api";
+import { successResponse, handleError, parseJsonBody } from "@/lib/api";
 import { NotFoundError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import { getOptionalUser } from "@/lib/auth/server";
 import { mealExists, getMealRatingSummary } from "@/features/meals/lib/queries";
 import { upsertMealRating, deleteMealRating } from "@/features/meals/lib/mutations";
 
@@ -16,8 +16,7 @@ export async function GET(_request: Request, context: RouteContext) {
       throw new NotFoundError("Meal not found");
     }
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getOptionalUser();
 
     return successResponse(await getMealRatingSummary(id, user?.id));
   } catch (error) {
@@ -28,9 +27,9 @@ export async function GET(_request: Request, context: RouteContext) {
 export async function POST(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const body = await request.json();
-    await upsertMealRating(id, body.rating);
-    return successResponse({ rating: body.rating });
+    const body = await parseJsonBody(request);
+    await upsertMealRating(id, body);
+    return successResponse({ success: true });
   } catch (error) {
     return handleError(error);
   }

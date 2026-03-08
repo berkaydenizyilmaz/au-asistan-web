@@ -5,23 +5,20 @@ import { and, eq, sql } from "drizzle-orm";
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { meals, mealRatings } from "@/lib/db/schema/content";
 import { requireUserId } from "@/lib/auth/server";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/errors";
+import { uuidString, parseOrThrow } from "@/lib/validation";
 import type { ParsedMeal } from "../types";
-import { uuidString, mealRatingInputSchema } from "./validators";
+import { mealRatingInputSchema } from "./validators";
 import { mealExists } from "./queries";
 
 export async function upsertMealRating(mealId: string, rating: unknown) {
   const userId = await requireUserId();
-
-  const parsedId = uuidString.safeParse(mealId);
-  if (!parsedId.success) throw new ValidationError("Invalid meal ID");
-
-  const parsedRating = mealRatingInputSchema.safeParse(
+  parseOrThrow(uuidString, mealId, "Invalid meal ID");
+  const parsed = parseOrThrow(
+    mealRatingInputSchema,
     typeof rating === "string" ? { rating } : rating,
+    'Rating must be "like" or "dislike"',
   );
-  if (!parsedRating.success) {
-    throw new ValidationError('Rating must be "like" or "dislike"');
-  }
 
   if (!(await mealExists(mealId))) {
     throw new NotFoundError("Meal not found");
@@ -40,21 +37,19 @@ export async function upsertMealRating(mealId: string, rating: unknown) {
     if (existing.length > 0) {
       await tx
         .update(mealRatings)
-        .set({ rating: parsedRating.data.rating })
+        .set({ rating: parsed.rating })
         .where(eq(mealRatings.id, existing[0].id));
     } else {
       await tx
         .insert(mealRatings)
-        .values({ mealId, userId, rating: parsedRating.data.rating });
+        .values({ mealId, userId, rating: parsed.rating });
     }
   });
 }
 
 export async function deleteMealRating(mealId: string) {
   const userId = await requireUserId();
-
-  const parsedId = uuidString.safeParse(mealId);
-  if (!parsedId.success) throw new ValidationError("Invalid meal ID");
+  parseOrThrow(uuidString, mealId, "Invalid meal ID");
 
   const db = await createDrizzleSupabaseClient();
   await db.rls((tx) =>

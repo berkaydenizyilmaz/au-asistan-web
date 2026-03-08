@@ -11,7 +11,8 @@ import {
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 
-import { skipWeekends, isBeforeMin, isAfterNow } from "../lib/date-utils";
+import { isAfterNow } from "@/lib/date";
+import { skipWeekends, isBeforeMin } from "../lib/date-utils";
 
 export type ViewMode = "daily" | "weekly" | "monthly";
 

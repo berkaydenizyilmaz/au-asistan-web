@@ -1,10 +1,10 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 
+import { getNowParts, formatDateInTimezone } from "@/lib/date";
 import { MealList } from "@/features/meals/components/meal-list";
 import { MealNavigation } from "@/features/meals/components/meal-navigation";
 import type { ViewMode } from "@/features/meals/components/meal-navigation";
 import {
-  formatDate,
   formatMonth,
   getMonday,
   getMonthRange,

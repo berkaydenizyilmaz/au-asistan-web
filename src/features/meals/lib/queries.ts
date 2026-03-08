@@ -4,60 +4,46 @@ import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { meals, mealRatings } from "@/lib/db/schema/content";
-import { ValidationError } from "@/lib/errors";
+import { uuidString, dateString, parseOrThrow } from "@/lib/validation";
 import type { MealDTO, MealItem } from "../types";
-import {
-  dateRangeSchema,
-  dateString,
-  uuidString,
-  formatZodIssues,
-} from "./validators";
+import { dateRangeSchema } from "./validators";
 
 function toMealDTO(row: { id: string; date: string; items: unknown; calories: number | null }): MealDTO {
   return { id: row.id, date: row.date, items: row.items as MealItem[], calories: row.calories };
 }
 
 export async function getMealsByDateRange(from: string, to: string) {
-  const parsed = dateRangeSchema.safeParse({ from, to });
-  if (!parsed.success) {
-    throw new ValidationError("Invalid date range", formatZodIssues(parsed.error));
-  }
+  const parsed = parseOrThrow(dateRangeSchema, { from, to }, "Invalid date range");
 
   const db = await createDrizzleSupabaseClient();
   const rows = await db.admin
     .select()
     .from(meals)
-    .where(and(gte(meals.date, parsed.data.from), lte(meals.date, parsed.data.to)))
+    .where(and(gte(meals.date, parsed.from), lte(meals.date, parsed.to)))
     .orderBy(asc(meals.date));
   return rows.map(toMealDTO);
 }
 
 export async function getMealByDate(date: string) {
-  const parsed = dateString.safeParse(date);
-  if (!parsed.success) {
-    throw new ValidationError("Invalid date format");
-  }
+  const parsed = parseOrThrow(dateString, date, "Invalid date format");
 
   const db = await createDrizzleSupabaseClient();
   const result = await db.admin
     .select()
     .from(meals)
-    .where(eq(meals.date, parsed.data))
+    .where(eq(meals.date, parsed))
     .limit(1);
   return result[0] ? toMealDTO(result[0]) : null;
 }
 
 export async function mealExists(id: string) {
-  const parsed = uuidString.safeParse(id);
-  if (!parsed.success) {
-    throw new ValidationError("Invalid meal ID");
-  }
+  parseOrThrow(uuidString, id, "Invalid meal ID");
 
   const db = await createDrizzleSupabaseClient();
   const result = await db.admin
     .select({ id: meals.id })
     .from(meals)
-    .where(eq(meals.id, parsed.data))
+    .where(eq(meals.id, id))
     .limit(1);
   return result.length > 0;
 }
@@ -66,15 +52,9 @@ export async function getMealRatingSummary(
   mealId: string,
   userId?: string,
 ) {
-  const parsedMealId = uuidString.safeParse(mealId);
-  if (!parsedMealId.success) {
-    throw new ValidationError("Invalid meal ID");
-  }
+  parseOrThrow(uuidString, mealId, "Invalid meal ID");
   if (userId) {
-    const parsedUserId = uuidString.safeParse(userId);
-    if (!parsedUserId.success) {
-      throw new ValidationError("Invalid user ID");
-    }
+    parseOrThrow(uuidString, userId, "Invalid user ID");
   }
 
   const db = await createDrizzleSupabaseClient();

@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import type { MealItem } from "../types";
-import { getTodayStr } from "../lib/date-utils";
+import { getTodayStr } from "@/lib/date";
 import type { ViewMode } from "./meal-navigation";
 import { MealCard } from "./meal-card";
 import { MealRating } from "./meal-rating";

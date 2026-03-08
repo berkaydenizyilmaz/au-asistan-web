@@ -1,4 +1,4 @@
-import { AppError } from "./errors";
+import { AppError, ValidationError } from "./errors";
 
 export interface ApiError {
   code: string;
@@ -21,6 +21,14 @@ export function errorResponse(code: string, message: string, status = 400) {
     { success: false, error: { code, message } } satisfies ApiResponse<never>,
     { status }
   );
+}
+
+export async function parseJsonBody(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    throw new ValidationError("Invalid JSON body");
+  }
 }
 
 export function handleError(error: unknown) {

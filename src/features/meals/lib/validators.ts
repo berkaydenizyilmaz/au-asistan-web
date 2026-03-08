@@ -2,12 +2,7 @@ import { z } from "zod";
 import { createInsertSchema } from "drizzle-zod";
 
 import { meals, mealRatings } from "@/lib/db/schema/content";
-
-export const dateString = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)");
-
-export const uuidString = z.string().uuid("Invalid ID format");
+import { dateString } from "@/lib/validation";
 
 export const insertMealSchema = createInsertSchema(meals, {
   date: (schema) => schema.regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date (YYYY-MM-DD)"),
@@ -27,10 +22,3 @@ export const dateRangeSchema = z
 export const mealRatingInputSchema = z.object({
   rating: z.enum(["like", "dislike"]),
 });
-
-export function formatZodIssues(error: z.ZodError) {
-  return error.issues.map((i) => ({
-    path: i.path.join("."),
-    message: i.message,
-  }));
-}
