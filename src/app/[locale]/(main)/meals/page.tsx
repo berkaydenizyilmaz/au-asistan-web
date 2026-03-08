@@ -35,14 +35,14 @@ export default async function MealsPage({
 
   const { month: monthParam, view: viewParam, day: dayParam } = await searchParams;
 
-  const now = new Date();
+  const now = getNowParts();
   const view: ViewMode =
     viewParam === "daily" || viewParam === "weekly" || viewParam === "monthly"
       ? viewParam
       : "monthly";
 
-  let year = now.getFullYear();
-  let month = now.getMonth() + 1;
+  let year = now.year;
+  let month = now.month;
   if (monthParam) {
     const match = monthParam.match(/^(\d{4})-(\d{2})$/);
     if (match) {
@@ -55,14 +55,14 @@ export default async function MealsPage({
   year = clamped.year;
   month = clamped.month;
 
-  let day = now.getDate();
+  let day = now.day;
   if (dayParam) {
     const parsed = parseInt(dayParam, 10);
     if (parsed >= 1 && parsed <= 31) day = parsed;
   }
 
-  if (year === now.getFullYear() && month === now.getMonth() + 1 && day > now.getDate()) {
-    day = now.getDate();
+  if (year === now.year && month === now.month && day > now.day) {
+    day = now.day;
   }
 
   if (view === "daily") {
@@ -84,8 +84,8 @@ export default async function MealsPage({
     const friday = new Date(monday);
     friday.setDate(monday.getDate() + 4);
 
-    const from = formatDate(monday);
-    const to = formatDate(friday);
+    const from = formatDateInTimezone(monday);
+    const to = formatDateInTimezone(friday);
     const mealData = await getMealsByDateRange(from, to);
 
     return (

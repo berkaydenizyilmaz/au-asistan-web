@@ -1,6 +1,6 @@
 import { successResponse, handleError } from "@/lib/api";
 import { NotFoundError } from "@/lib/errors";
-import { getTodayStr } from "@/features/meals/lib/date-utils";
+import { getTodayStr } from "@/lib/date";
 import { getMealByDate } from "@/features/meals/lib/queries";
 
 export async function GET() {
