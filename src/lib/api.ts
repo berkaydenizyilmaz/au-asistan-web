@@ -1,5 +1,6 @@
 import { env } from "./env";
 import { AppError, UnauthorizedError, ValidationError } from "./errors";
+import { logger } from "./logger";
 
 export interface ApiError {
   code: string;
@@ -40,7 +41,7 @@ export function handleError(error: unknown) {
     );
   }
 
-  console.error("[UNHANDLED]", error);
+  logger.error("Unhandled error", error);
   return Response.json(
     {
       success: false,
