@@ -73,12 +73,12 @@ export function withCronAuth(
   handler: (request: Request) => Promise<Response>,
 ): (request: Request) => Promise<Response> {
   return async (request) => {
-    const secret = request.headers.get("x-cron-secret");
-    if (!env.cronSecret || secret !== env.cronSecret) {
-      throw new UnauthorizedError("Invalid cron secret");
-    }
-
     try {
+      const secret = request.headers.get("x-cron-secret");
+      if (!env.cronSecret || secret !== env.cronSecret) {
+        throw new UnauthorizedError("Invalid cron secret");
+      }
+
       return await handler(request);
     } catch (error) {
       return handleError(error);

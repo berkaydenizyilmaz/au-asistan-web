@@ -43,6 +43,6 @@ export function isAfterNow(year: number, month: number, day?: number): boolean {
   if (year < now.year) return false;
   if (month > now.month) return true;
   if (month < now.month) return false;
-  if (day && day > now.day) return true;
+  if (day !== undefined && day > now.day) return true;
   return false;
 }

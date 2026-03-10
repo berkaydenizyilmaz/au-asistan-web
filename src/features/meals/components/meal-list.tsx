@@ -1,20 +1,13 @@
 import { useTranslations } from "next-intl";
 
-import type { MealItem } from "../types";
+import type { MealDTO } from "../types";
 import { getTodayStr } from "@/lib/date";
 import type { ViewMode } from "./meal-navigation";
 import { MealCard } from "./meal-card";
 import { MealRating } from "./meal-rating";
 
-interface MealData {
-  id: string;
-  date: string;
-  items: MealItem[];
-  calories: number | null;
-}
-
 interface MealListProps {
-  meals: MealData[];
+  meals: MealDTO[];
   view: ViewMode;
 }
 

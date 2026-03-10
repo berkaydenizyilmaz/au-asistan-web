@@ -15,7 +15,8 @@ export function getMonday(d: Date): Date {
   return date;
 }
 
-export function skipWeekends(d: Date, direction: 1 | -1): Date {
+export function skipWeekends(input: Date, direction: 1 | -1): Date {
+  const d = new Date(input);
   while (d.getDay() === 0 || d.getDay() === 6) {
     d.setDate(d.getDate() + direction);
   }

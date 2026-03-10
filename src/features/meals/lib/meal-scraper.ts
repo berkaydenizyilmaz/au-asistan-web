@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 
+import { AppError } from "@/lib/errors";
 import type { MealCategory, MealItem, ParsedMeal } from "../types";
 
 const MEAL_URL = "https://amasya.edu.tr/aylik-yemek-listesi";
@@ -87,9 +88,11 @@ export async function scrapeMeals(): Promise<ParsedMeal[]> {
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to fetch meal page: ${response.status} ${response.statusText}`
-    );
+    throw new AppError({
+      message: `Failed to fetch meal page: ${response.status} ${response.statusText}`,
+      code: "SCRAPE_FAILED",
+      statusCode: 502,
+    });
   }
 
   const html = await response.text();
@@ -97,7 +100,11 @@ export async function scrapeMeals(): Promise<ParsedMeal[]> {
 
   const monthYear = parseMonthYear($);
   if (!monthYear) {
-    throw new Error("Could not parse month/year from meal page header");
+    throw new AppError({
+      message: "Could not parse month/year from meal page header",
+      code: "SCRAPE_PARSE_FAILED",
+      statusCode: 502,
+    });
   }
 
   const { month, year } = monthYear;
