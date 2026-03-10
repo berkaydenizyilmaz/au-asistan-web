@@ -1,4 +1,5 @@
-import { AppError, ValidationError } from "./errors";
+import { env } from "./env";
+import { AppError, UnauthorizedError, ValidationError } from "./errors";
 
 export interface ApiError {
   code: string;
@@ -14,13 +15,6 @@ export function successResponse<T>(data: T, status = 200) {
   return Response.json({ success: true, data } satisfies ApiResponse<T>, {
     status,
   });
-}
-
-export function errorResponse(code: string, message: string, status = 400) {
-  return Response.json(
-    { success: false, error: { code, message } } satisfies ApiResponse<never>,
-    { status }
-  );
 }
 
 export async function parseJsonBody(request: Request): Promise<unknown> {
@@ -57,4 +51,36 @@ export function handleError(error: unknown) {
     } satisfies ApiResponse<never>,
     { status: 500 },
   );
+}
+
+type RouteHandler = (
+  request: Request,
+  context: { params: Promise<Record<string, string>> },
+) => Promise<Response>;
+
+export function withErrorHandler(handler: RouteHandler): RouteHandler {
+  return async (request, context) => {
+    try {
+      return await handler(request, context);
+    } catch (error) {
+      return handleError(error);
+    }
+  };
+}
+
+export function withCronAuth(
+  handler: (request: Request) => Promise<Response>,
+): (request: Request) => Promise<Response> {
+  return async (request) => {
+    const secret = request.headers.get("x-cron-secret");
+    if (!env.cronSecret || secret !== env.cronSecret) {
+      throw new UnauthorizedError("Invalid cron secret");
+    }
+
+    try {
+      return await handler(request);
+    } catch (error) {
+      return handleError(error);
+    }
+  };
 }

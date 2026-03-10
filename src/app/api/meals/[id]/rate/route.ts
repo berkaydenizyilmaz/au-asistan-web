@@ -1,46 +1,29 @@
-import { successResponse, handleError, parseJsonBody } from "@/lib/api";
+import { successResponse, withErrorHandler, parseJsonBody } from "@/lib/api";
 import { NotFoundError } from "@/lib/errors";
 import { getOptionalUser } from "@/lib/auth/server";
 import { mealExists, getMealRatingSummary } from "@/features/meals/lib/queries";
 import { upsertMealRating, deleteMealRating } from "@/features/meals/lib/mutations";
 
-interface RouteContext {
-  params: Promise<{ id: string }>;
-}
+export const GET = withErrorHandler(async (_request, context) => {
+  const { id } = await context.params;
 
-export async function GET(_request: Request, context: RouteContext) {
-  try {
-    const { id } = await context.params;
-
-    if (!(await mealExists(id))) {
-      throw new NotFoundError("Meal not found");
-    }
-
-    const user = await getOptionalUser();
-
-    return successResponse(await getMealRatingSummary(id, user?.id));
-  } catch (error) {
-    return handleError(error);
+  if (!(await mealExists(id))) {
+    throw new NotFoundError("Meal not found");
   }
-}
 
-export async function POST(request: Request, context: RouteContext) {
-  try {
-    const { id } = await context.params;
-    const body = await parseJsonBody(request);
-    await upsertMealRating(id, body);
-    return successResponse({ success: true });
-  } catch (error) {
-    return handleError(error);
-  }
-}
+  const user = await getOptionalUser();
+  return successResponse(await getMealRatingSummary(id, user?.id));
+});
 
-export async function DELETE(_request: Request, context: RouteContext) {
-  try {
-    const { id } = await context.params;
-    await deleteMealRating(id);
-    return successResponse({ deleted: true });
-  } catch (error) {
-    return handleError(error);
-  }
-}
+export const POST = withErrorHandler(async (request, context) => {
+  const { id } = await context.params;
+  const body = await parseJsonBody(request);
+  await upsertMealRating(id, body);
+  return successResponse({ success: true });
+});
+
+export const DELETE = withErrorHandler(async (_request, context) => {
+  const { id } = await context.params;
+  await deleteMealRating(id);
+  return successResponse({ deleted: true });
+});
