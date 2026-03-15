@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ThumbsUpIcon, ThumbsDownIcon } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -79,9 +80,11 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
           });
 
       if (!res.ok) {
+        toast.error(t("ratingFailed"));
         await fetchRating();
       }
     } catch {
+      toast.error(t("ratingFailed"));
       await fetchRating();
     } finally {
       setIsSubmitting(false);

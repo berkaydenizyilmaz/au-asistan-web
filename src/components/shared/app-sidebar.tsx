@@ -16,6 +16,8 @@ import {
   ChevronsUpDown,
 } from "@hugeicons/core-free-icons";
 
+import { toast } from "sonner";
+
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { signOut } from "@/features/auth/lib/auth-actions";
@@ -163,6 +165,7 @@ function UserDropdown() {
     const { error } = await signOut();
     if (error) {
       logger.error("Logout failed", error.message);
+      toast.error(t("logoutFailed"));
     }
   }
 

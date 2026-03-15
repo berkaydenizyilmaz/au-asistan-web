@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { AuthProvider } from "@/features/auth/components/auth-provider";
@@ -49,6 +50,7 @@ export default async function LocaleLayout({
           <ThemeProvider>
             <AuthProvider>
               <TooltipProvider>{children}</TooltipProvider>
+              <Toaster richColors closeButton />
             </AuthProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
