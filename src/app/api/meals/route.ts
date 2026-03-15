@@ -1,4 +1,4 @@
-import { successResponse, withErrorHandler } from "@/lib/api";
+import { successResponse, withErrorHandler } from "@/lib/api/server";
 import { getNowParts } from "@/lib/date";
 import { getMonthRange } from "@/features/meals/lib/date-utils";
 import { getMealsByDateRange } from "@/features/meals/lib/queries";

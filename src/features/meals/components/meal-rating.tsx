@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuthStore } from "@/stores/auth-store";
-import { apiFetch, ApiClientError } from "@/lib/api-client";
+import { apiFetch, ApiClientError } from "@/lib/api/client";
 
 interface MealRatingProps {
   mealId: string;

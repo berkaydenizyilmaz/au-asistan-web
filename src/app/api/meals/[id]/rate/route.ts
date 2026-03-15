@@ -1,4 +1,4 @@
-import { successResponse, withErrorHandler, parseJsonBody } from "@/lib/api";
+import { successResponse, withErrorHandler, parseJsonBody } from "@/lib/api/server";
 import { NotFoundError } from "@/lib/errors";
 import { getOptionalUser } from "@/lib/auth/server";
 import { mealExists, getMealRatingSummary } from "@/features/meals/lib/queries";

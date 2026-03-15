@@ -1,16 +1,7 @@
-import { env } from "./env";
-import { AppError, UnauthorizedError, ValidationError } from "./errors";
-import { logger } from "./logger";
-
-export interface ApiError {
-  code: string;
-  message: string;
-  details?: unknown;
-}
-
-export type ApiResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: ApiError };
+import { env } from "../env";
+import { AppError, UnauthorizedError, ValidationError } from "../errors";
+import { logger } from "../logger";
+import type { ApiResponse } from "./types";
 
 export function successResponse<T>(data: T, status = 200) {
   return Response.json({ success: true, data } satisfies ApiResponse<T>, {

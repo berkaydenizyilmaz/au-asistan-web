@@ -1,4 +1,4 @@
-import { successResponse, withErrorHandler } from "@/lib/api";
+import { successResponse, withErrorHandler } from "@/lib/api/server";
 import { NotFoundError } from "@/lib/errors";
 import { getTodayStr } from "@/lib/date";
 import { getMealByDate } from "@/features/meals/lib/queries";

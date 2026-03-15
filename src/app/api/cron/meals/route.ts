@@ -1,4 +1,4 @@
-import { successResponse, withCronAuth } from "@/lib/api";
+import { successResponse, withCronAuth } from "@/lib/api/server";
 import { logger } from "@/lib/logger";
 import { scrapeMeals } from "@/features/meals/lib/meal-scraper";
 import { upsertMeals } from "@/features/meals/lib/mutations";
