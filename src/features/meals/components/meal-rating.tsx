@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuthStore } from "@/stores/auth-store";
+import { apiFetch, ApiClientError } from "@/lib/api-client";
 
 interface MealRatingProps {
   mealId: string;
@@ -28,19 +29,22 @@ interface RatingData {
 
 export function MealRating({ mealId, isToday }: MealRatingProps) {
   const t = useTranslations("meals");
+  const te = useTranslations("errors");
   const user = useAuthStore((s) => s.user);
   const [data, setData] = useState<RatingData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function showError(err: unknown) {
+    const code = err instanceof ApiClientError ? err.code : "UNKNOWN";
+    toast.error(te.has(code) ? te(code) : t("ratingFailed"));
+  }
+
   const fetchRating = useCallback(async () => {
     try {
-      const res = await fetch(`/api/meals/${mealId}/rate`);
-      if (res.ok) {
-        const json = await res.json();
-        setData(json.data);
-      }
+      const result = await apiFetch<RatingData>(`/api/meals/${mealId}/rate`);
+      setData(result);
     } catch {
-      // Rating is non-critical
+      // Rating display is non-critical — fail silently on initial load
     }
   }, [mealId]);
 
@@ -71,20 +75,17 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
 
     setIsSubmitting(true);
     try {
-      const res = wasToggle
-        ? await fetch(`/api/meals/${mealId}/rate`, { method: "DELETE" })
-        : await fetch(`/api/meals/${mealId}/rate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rating }),
-          });
-
-      if (!res.ok) {
-        toast.error(t("ratingFailed"));
-        await fetchRating();
+      if (wasToggle) {
+        await apiFetch(`/api/meals/${mealId}/rate`, { method: "DELETE" });
+      } else {
+        await apiFetch(`/api/meals/${mealId}/rate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rating }),
+        });
       }
-    } catch {
-      toast.error(t("ratingFailed"));
+    } catch (err) {
+      showError(err);
       await fetchRating();
     } finally {
       setIsSubmitting(false);

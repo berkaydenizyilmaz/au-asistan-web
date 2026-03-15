@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/logger";
@@ -34,6 +35,7 @@ function GoogleIcon() {
 
 export function OAuthButtons() {
   const t = useTranslations("auth");
+  const te = useTranslations("errors");
   const params = useParams<{ locale: string }>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,10 +45,12 @@ export function OAuthButtons() {
       const { error } = await signInWithGoogle(params.locale);
       if (error) {
         logger.error("Google OAuth error", error.message);
+        toast.error(te.has(error.code) ? te(error.code) : te("UNKNOWN"));
         setIsLoading(false);
       }
     } catch (err) {
       logger.error("Unexpected OAuth error", err);
+      toast.error(te("UNKNOWN"));
       setIsLoading(false);
     }
   }

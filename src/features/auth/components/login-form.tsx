@@ -27,6 +27,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
   const t = useTranslations("auth");
+  const te = useTranslations("errors");
 
   const {
     register,
@@ -42,11 +43,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     return t(`errors.${error.message}` as never);
   }
 
+  function resolveRootError(code?: string) {
+    if (!code) return undefined;
+    return te.has(code) ? te(code) : te("UNKNOWN");
+  }
+
   async function onSubmit(data: LoginFormData) {
     const { error } = await signInWithEmail(data);
     if (error) {
       logger.error("Login failed", error.message);
-      setError("root", { message: error.message });
+      setError("root", { message: error.code });
       return;
     }
     onSuccess();
@@ -59,7 +65,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
         <FieldSeparator>{t("orContinueWithEmail")}</FieldSeparator>
 
-        {errors.root && <FieldError>{errors.root.message}</FieldError>}
+        {errors.root && (
+          <FieldError>{resolveRootError(errors.root.message)}</FieldError>
+        )}
 
         <Field>
           <FieldLabel>{t("email")}</FieldLabel>

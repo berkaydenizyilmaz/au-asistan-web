@@ -1,4 +1,19 @@
 {
+  "errors": {
+    "VALIDATION_ERROR": "Girilen bilgiler geçersiz.",
+    "UNAUTHORIZED": "Bu işlem için giriş yapmanız gerekiyor.",
+    "FORBIDDEN": "Bu işlem için yetkiniz yok.",
+    "NOT_FOUND": "Aradığınız kayıt bulunamadı.",
+    "CONFLICT": "Bu kayıt zaten mevcut.",
+    "INTERNAL_ERROR": "Beklenmeyen bir hata oluştu.",
+    "UNKNOWN": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "INVALID_CREDENTIALS": "E-posta veya şifre hatalı.",
+    "EMAIL_ALREADY_REGISTERED": "Bu e-posta adresi zaten kayıtlı.",
+    "EMAIL_NOT_CONFIRMED": "E-posta adresiniz henüz doğrulanmamış.",
+    "SAME_PASSWORD": "Yeni şifre eski şifreden farklı olmalı.",
+    "PASSWORD_TOO_SHORT": "Şifre en az 6 karakter olmalı.",
+    "RATE_LIMIT": "Çok fazla deneme yaptınız. Lütfen biraz bekleyin."
+  },
   "common": {
     "appName": "AÜ Asistan",
     "appDescription": "Üniversite Asistanı",

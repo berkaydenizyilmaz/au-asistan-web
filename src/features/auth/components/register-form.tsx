@@ -27,6 +27,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const t = useTranslations("auth");
+  const te = useTranslations("errors");
 
   const {
     register,
@@ -42,11 +43,16 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     return t(`errors.${error.message}` as never);
   }
 
+  function resolveRootError(code?: string) {
+    if (!code) return undefined;
+    return te.has(code) ? te(code) : te("UNKNOWN");
+  }
+
   async function onSubmit(data: RegisterFormData) {
     const { error } = await signUpWithEmail(data);
     if (error) {
       logger.error("Registration failed", error.message);
-      setError("root", { message: error.message });
+      setError("root", { message: error.code });
       return;
     }
     onSuccess();
@@ -59,7 +65,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
         <FieldSeparator>{t("orContinueWithEmail")}</FieldSeparator>
 
-        {errors.root && <FieldError>{errors.root.message}</FieldError>}
+        {errors.root && (
+          <FieldError>{resolveRootError(errors.root.message)}</FieldError>
+        )}
 
         <Field>
           <FieldLabel>{t("name")}</FieldLabel>

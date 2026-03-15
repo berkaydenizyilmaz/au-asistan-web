@@ -1,4 +1,19 @@
 {
+  "errors": {
+    "VALIDATION_ERROR": "The information you entered is invalid.",
+    "UNAUTHORIZED": "You need to sign in to perform this action.",
+    "FORBIDDEN": "You don't have permission for this action.",
+    "NOT_FOUND": "The requested record was not found.",
+    "CONFLICT": "This record already exists.",
+    "INTERNAL_ERROR": "An unexpected error occurred.",
+    "UNKNOWN": "An error occurred. Please try again.",
+    "INVALID_CREDENTIALS": "Invalid email or password.",
+    "EMAIL_ALREADY_REGISTERED": "This email is already registered.",
+    "EMAIL_NOT_CONFIRMED": "Your email has not been confirmed yet.",
+    "SAME_PASSWORD": "New password must be different from the old one.",
+    "PASSWORD_TOO_SHORT": "Password must be at least 6 characters.",
+    "RATE_LIMIT": "Too many attempts. Please wait a moment."
+  },
   "common": {
     "appName": "AU Assistant",
     "appDescription": "University Assistant",

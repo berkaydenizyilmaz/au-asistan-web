@@ -160,12 +160,13 @@ export function AppSidebar() {
 function UserDropdown() {
   const user = useAuthStore((s) => s.user);
   const t = useTranslations("nav");
+  const te = useTranslations("errors");
 
   async function handleLogout() {
     const { error } = await signOut();
     if (error) {
       logger.error("Logout failed", error.message);
-      toast.error(t("logoutFailed"));
+      toast.error(te.has(error.code) ? te(error.code) : t("logoutFailed"));
     }
   }
 
