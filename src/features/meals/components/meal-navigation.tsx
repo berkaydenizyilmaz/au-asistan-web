@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -48,18 +48,25 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
   const t = useTranslations("meals");
   const router = useRouter();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
 
   function buildUrl(v: ViewMode, y: number, m: number, d: number) {
     const params = new URLSearchParams();
     params.set("view", v);
     params.set("month", `${y}-${String(m).padStart(2, "0")}`);
-    if (v === "daily") params.set("day", String(d));
+    if (v !== "monthly") params.set("day", String(d));
     return `${pathname}?${params.toString()}`;
+  }
+
+  function navigateTo(url: string) {
+    startTransition(() => {
+      router.push(url);
+    });
   }
 
   function navigate(direction: 1 | -1) {
     const target = getSteppedDate(view, year, month, day, direction);
-    router.push(buildUrl(view, target.year, target.month, target.day));
+    navigateTo(buildUrl(view, target.year, target.month, target.day));
   }
 
   const prev = useMemo(() => getSteppedDate(view, year, month, day, -1), [view, year, month, day]);
@@ -101,7 +108,8 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
             variant={view === v ? "default" : "ghost"}
             size="sm"
             className="rounded-full text-xs px-3 h-7"
-            onClick={() => router.push(buildUrl(v, year, month, day))}
+            disabled={isPending}
+            onClick={() => navigateTo(buildUrl(v, year, month, day))}
           >
             {t(`view${v.charAt(0).toUpperCase() + v.slice(1)}` as "viewDaily" | "viewWeekly" | "viewMonthly")}
           </Button>
@@ -113,19 +121,23 @@ export function MealNavigation({ year, month, day, view }: MealNavigationProps) 
           variant="outline"
           size="icon-sm"
           onClick={() => navigate(-1)}
-          disabled={prevDisabled}
+          disabled={prevDisabled || isPending}
           aria-label={t("previous")}
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} />
         </Button>
         <span className="text-sm font-medium min-w-44 text-center">
-          {label}
+          {isPending ? (
+            <span className="inline-block h-4 w-32 animate-pulse rounded bg-muted" />
+          ) : (
+            label
+          )}
         </span>
         <Button
           variant="outline"
           size="icon-sm"
           onClick={() => navigate(1)}
-          disabled={nextDisabled}
+          disabled={nextDisabled || isPending}
           aria-label={t("next")}
         >
           <HugeiconsIcon icon={ArrowRight01Icon} />

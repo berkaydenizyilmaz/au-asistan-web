@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 
-import type { MealDTO } from "../types";
+import type { MealDTO, RatingSummary } from "../types";
 import { getTodayStr } from "@/lib/date";
 import type { ViewMode } from "./meal-navigation";
 import { MealCard } from "./meal-card";
@@ -9,9 +9,10 @@ import { MealRating } from "./meal-rating";
 interface MealListProps {
   meals: MealDTO[];
   view: ViewMode;
+  ratingsMap: Map<string, RatingSummary>;
 }
 
-export function MealList({ meals, view }: MealListProps) {
+export function MealList({ meals, view, ratingsMap }: MealListProps) {
   const t = useTranslations("meals");
 
   if (meals.length === 0) {
@@ -29,7 +30,7 @@ export function MealList({ meals, view }: MealListProps) {
 
     return (
       <div className="flex justify-center pt-2">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md" key={meal.id}>
           <MealCard
             date={meal.date}
             items={meal.items}
@@ -37,7 +38,7 @@ export function MealList({ meals, view }: MealListProps) {
             isToday={isToday}
             expanded
           >
-            <MealRating mealId={meal.id} isToday={isToday} />
+            <MealRating mealId={meal.id} isToday={isToday} initialData={ratingsMap.get(meal.id)} />
           </MealCard>
         </div>
       </div>
@@ -57,7 +58,7 @@ export function MealList({ meals, view }: MealListProps) {
               calories={meal.calories}
               isToday={isToday}
             >
-              <MealRating mealId={meal.id} isToday={isToday} />
+              <MealRating mealId={meal.id} isToday={isToday} initialData={ratingsMap.get(meal.id)} />
             </MealCard>
           );
         })}
@@ -77,7 +78,7 @@ export function MealList({ meals, view }: MealListProps) {
             calories={meal.calories}
             isToday={isToday}
           >
-            <MealRating mealId={meal.id} isToday={isToday} />
+            <MealRating mealId={meal.id} isToday={isToday} initialData={ratingsMap.get(meal.id)} />
           </MealCard>
         );
       })}

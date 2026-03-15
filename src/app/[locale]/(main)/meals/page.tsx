@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 
 import { getNowParts, formatDateInTimezone } from "@/lib/date";
+import { getOptionalUser } from "@/lib/auth/server";
 import { MealList } from "@/features/meals/components/meal-list";
 import { MealNavigation } from "@/features/meals/components/meal-navigation";
 import type { ViewMode } from "@/features/meals/components/meal-navigation";
@@ -13,7 +14,9 @@ import {
 import {
   getMealByDate,
   getMealsByDateRange,
+  getMealRatingSummaries,
 } from "@/features/meals/lib/queries";
+import type { MealDTO } from "@/features/meals/types";
 
 interface MealsPageProps {
   params: Promise<{ locale: string }>;
@@ -65,44 +68,33 @@ export default async function MealsPage({
     day = now.day;
   }
 
+  let meals: MealDTO[];
+
   if (view === "daily") {
     const dateStr = `${formatMonth(year, month)}-${String(day).padStart(2, "0")}`;
     const meal = await getMealByDate(dateStr);
-    const typedMeals = meal ? [meal] : [];
-
-    return (
-      <div className="space-y-6">
-        <MealNavigation year={year} month={month} day={day} view={view} />
-        <MealList meals={typedMeals} view={view} />
-      </div>
-    );
-  }
-
-  if (view === "weekly") {
+    meals = meal ? [meal] : [];
+  } else if (view === "weekly") {
     const targetDate = new Date(year, month - 1, day);
     const monday = getMonday(targetDate);
     const friday = new Date(monday);
     friday.setDate(monday.getDate() + 4);
-
-    const from = formatDateInTimezone(monday);
-    const to = formatDateInTimezone(friday);
-    const mealData = await getMealsByDateRange(from, to);
-
-    return (
-      <div className="space-y-6">
-        <MealNavigation year={year} month={month} day={day} view={view} />
-        <MealList meals={mealData} view={view} />
-      </div>
-    );
+    meals = await getMealsByDateRange(formatDateInTimezone(monday), formatDateInTimezone(friday));
+  } else {
+    const { from, to } = getMonthRange(year, month);
+    meals = await getMealsByDateRange(from, to);
   }
 
-  const { from, to } = getMonthRange(year, month);
-  const mealData = await getMealsByDateRange(from, to);
+  const user = await getOptionalUser();
+  const ratingsMap = await getMealRatingSummaries(
+    meals.map((m) => m.id),
+    user?.id,
+  );
 
   return (
     <div className="space-y-6">
       <MealNavigation year={year} month={month} day={day} view={view} />
-      <MealList meals={mealData} view={view} />
+      <MealList meals={meals} view={view} ratingsMap={ratingsMap} />
     </div>
   );
 }

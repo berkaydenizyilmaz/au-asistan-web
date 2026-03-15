@@ -16,22 +16,19 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch, ApiClientError } from "@/lib/api/client";
 
+import type { RatingSummary } from "../types";
+
 interface MealRatingProps {
   mealId: string;
   isToday: boolean;
+  initialData?: RatingSummary;
 }
 
-interface RatingData {
-  likes: number;
-  dislikes: number;
-  userRating: "like" | "dislike" | null;
-}
-
-export function MealRating({ mealId, isToday }: MealRatingProps) {
+export function MealRating({ mealId, isToday, initialData }: MealRatingProps) {
   const t = useTranslations("meals");
   const te = useTranslations("errors");
   const user = useAuthStore((s) => s.user);
-  const [data, setData] = useState<RatingData | null>(null);
+  const [data, setData] = useState<RatingSummary | null>(initialData ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function showError(err: unknown) {
@@ -41,7 +38,7 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
 
   const fetchRating = useCallback(async () => {
     try {
-      const result = await apiFetch<RatingData>(`/api/meals/${mealId}/rate`);
+      const result = await apiFetch<RatingSummary>(`/api/meals/${mealId}/rate`);
       setData(result);
     } catch {
       // Rating display is non-critical — fail silently on initial load
@@ -49,8 +46,8 @@ export function MealRating({ mealId, isToday }: MealRatingProps) {
   }, [mealId]);
 
   useEffect(() => {
-    fetchRating();
-  }, [fetchRating]);
+    if (!initialData) fetchRating();
+  }, [fetchRating, initialData]);
 
   async function handleRate(rating: "like" | "dislike") {
     if (!user || isSubmitting || !isToday) return;

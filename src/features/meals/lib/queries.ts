@@ -1,11 +1,11 @@
 import "server-only";
 
-import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { meals, mealRatings } from "@/lib/db/schema/content";
 import { uuidString, dateString, parseOrThrow } from "@/lib/validation";
-import type { MealDTO, MealItem } from "../types";
+import type { MealDTO, MealItem, RatingSummary } from "../types";
 import { dateRangeSchema } from "./validators";
 
 function toMealDTO(row: { id: string; date: string; items: unknown; calories: number | null }): MealDTO {
@@ -87,4 +87,51 @@ export async function getMealRatingSummary(
     dislikes: Number(counts[0]?.dislikes ?? 0),
     userRating,
   };
+}
+
+export async function getMealRatingSummaries(
+  mealIds: string[],
+  userId?: string,
+): Promise<Map<string, RatingSummary>> {
+  if (mealIds.length === 0) return new Map();
+
+  const db = await createDrizzleSupabaseClient();
+
+  const counts = await db.admin
+    .select({
+      mealId: mealRatings.mealId,
+      likes: sql<number>`count(*) filter (where ${mealRatings.rating} = 'like')`,
+      dislikes: sql<number>`count(*) filter (where ${mealRatings.rating} = 'dislike')`,
+    })
+    .from(mealRatings)
+    .where(inArray(mealRatings.mealId, mealIds))
+    .groupBy(mealRatings.mealId);
+
+  const userRatings = new Map<string, string>();
+  if (userId) {
+    const rows = await db.admin
+      .select({ mealId: mealRatings.mealId, rating: mealRatings.rating })
+      .from(mealRatings)
+      .where(
+        and(
+          inArray(mealRatings.mealId, mealIds),
+          eq(mealRatings.userId, userId),
+        ),
+      );
+    for (const row of rows) {
+      userRatings.set(row.mealId, row.rating);
+    }
+  }
+
+  const result = new Map<string, RatingSummary>();
+  for (const id of mealIds) {
+    const row = counts.find((c) => c.mealId === id);
+    result.set(id, {
+      likes: Number(row?.likes ?? 0),
+      dislikes: Number(row?.dislikes ?? 0),
+      userRating: (userRatings.get(id) as "like" | "dislike") ?? null,
+    });
+  }
+
+  return result;
 }

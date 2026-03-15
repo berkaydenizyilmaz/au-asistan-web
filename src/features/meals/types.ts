@@ -17,3 +17,9 @@ export interface MealDTO {
   items: MealItem[];
   calories: number | null;
 }
+
+export interface RatingSummary {
+  likes: number;
+  dislikes: number;
+  userRating: "like" | "dislike" | null;
+}
