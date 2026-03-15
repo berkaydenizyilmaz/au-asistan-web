@@ -123,9 +123,10 @@ export async function getMealRatingSummaries(
     }
   }
 
+  const countsMap = new Map(counts.map((c) => [c.mealId, c]));
   const result = new Map<string, RatingSummary>();
   for (const id of mealIds) {
-    const row = counts.find((c) => c.mealId === id);
+    const row = countsMap.get(id);
     result.set(id, {
       likes: Number(row?.likes ?? 0),
       dislikes: Number(row?.dislikes ?? 0),
