@@ -44,11 +44,8 @@ function createDrizzle(
 }
 
 export async function createDrizzleSupabaseClient() {
-  const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { getUser } = await import("@/lib/supabase/server");
+  const user = await getUser();
 
   const token: SupabaseToken = user
     ? { sub: user.id, role: "authenticated" }

@@ -18,7 +18,7 @@ import {
 
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/features/auth/lib/auth-actions";
 import { logger } from "@/lib/logger";
 import {
   Sidebar,
@@ -160,8 +160,7 @@ function UserDropdown() {
   const t = useTranslations("nav");
 
   async function handleLogout() {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signOut();
+    const { error } = await signOut();
     if (error) {
       logger.error("Logout failed", error.message);
     }

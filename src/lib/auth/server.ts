@@ -6,22 +6,16 @@ import type { User } from "@supabase/supabase-js";
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { UnauthorizedError, ForbiddenError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/server";
 
 type UserRole = "user" | "admin";
 
-async function getSupabaseUser(): Promise<User | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
-}
-
 export async function getOptionalUser(): Promise<User | null> {
-  return getSupabaseUser();
+  return getUser();
 }
 
 export async function requireUser(): Promise<User> {
-  const user = await getSupabaseUser();
+  const user = await getUser();
   if (!user) throw new UnauthorizedError();
   return user;
 }

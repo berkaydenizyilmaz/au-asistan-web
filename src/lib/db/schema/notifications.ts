@@ -41,6 +41,7 @@ export const notifications = pgTable(
       for: "update",
       to: authenticatedRole,
       using: sql`${table.userId} = ${authUid}`,
+      withCheck: sql`${table.userId} = ${authUid}`,
     }),
   ]
 );

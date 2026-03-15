@@ -48,6 +48,7 @@ export const conversations = pgTable(
       for: "update",
       to: authenticatedRole,
       using: sql`${table.userId} = ${authUid}`,
+      withCheck: sql`${table.userId} = ${authUid}`,
     }),
     pgPolicy("users can delete own conversations", {
       for: "delete",
