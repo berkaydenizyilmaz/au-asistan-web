@@ -107,6 +107,37 @@
       "12": "December"
     }
   },
+  "calendar": {
+    "title": "Academic Calendar",
+    "fall": "Fall Semester",
+    "spring": "Spring Semester",
+    "noActiveCalendar": "No active academic calendar.",
+    "noActiveCalendarDescription": "The calendar will be displayed here once the new academic year is announced.",
+    "academicYear": "{year} Academic Year",
+    "today": "Today",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "dateRange": "{start} – {end}",
+    "completedCount": "{count} completed",
+    "activeCount": "{count} active",
+    "upcomingCount": "{count} upcoming",
+    "happeningNow": "In progress",
+    "daysRemaining": "{count} days left",
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
+  },
   "nav": {
     "home": "Home",
     "meals": "Meals",

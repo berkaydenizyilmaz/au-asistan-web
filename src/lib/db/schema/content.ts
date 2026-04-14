@@ -133,6 +133,9 @@ export const academicCalendar = pgTable(
     description: text(),
     startDate: date("start_date").notNull(),
     endDate: date("end_date"),
+    semester: text().notNull(),
+    academicYear: text("academic_year").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
