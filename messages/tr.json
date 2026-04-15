@@ -138,6 +138,15 @@
       "12": "Aralık"
     }
   },
+  "chat": {
+    "placeholder": "Mesajınızı yazın...",
+    "send": "Gönder",
+    "emptyTitle": "AÜ Asistan'a Hoş Geldiniz",
+    "emptyDescription": "Amasya Üniversitesi hakkında her şeyi sorabilirsiniz.",
+    "suggestMeals": "Bugünkü yemek ne?",
+    "suggestCalendar": "Akademik takvimde yaklaşan olaylar",
+    "suggestEvents": "Yaklaşan etkinlikler neler?"
+  },
   "nav": {
     "home": "Ana Sayfa",
     "meals": "Yemek Listesi",

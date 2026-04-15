@@ -138,6 +138,15 @@
       "12": "December"
     }
   },
+  "chat": {
+    "placeholder": "Type your message...",
+    "send": "Send",
+    "emptyTitle": "Welcome to AU Assistant",
+    "emptyDescription": "Ask anything about Amasya University.",
+    "suggestMeals": "What's today's meal?",
+    "suggestCalendar": "Upcoming academic calendar events",
+    "suggestEvents": "What events are coming up?"
+  },
   "nav": {
     "home": "Home",
     "meals": "Meals",
