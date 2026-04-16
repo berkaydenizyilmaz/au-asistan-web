@@ -147,6 +147,8 @@
     "suggestCalendar": "Upcoming academic calendar events",
     "suggestEvents": "What events are coming up?",
     "untitled": "New Chat",
+    "newChat": "New chat",
+    "clearChat": "Clear chat",
     "deleteConversation": "Delete conversation",
     "conversationNotFound": "Conversation not found"
   },

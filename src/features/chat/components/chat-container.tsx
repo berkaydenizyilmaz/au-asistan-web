@@ -4,7 +4,11 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useState } from "react";
 import type { UIMessage } from "ai";
+import { useTranslations } from "next-intl";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons";
 
+import { Button } from "@/components/ui/button";
 import { ChatEmptyState } from "./chat-empty-state";
 import { ChatMessageList } from "./chat-message-list";
 import { ChatInput } from "./chat-input";
@@ -24,10 +28,8 @@ const transport = new DefaultChatTransport({
     const newId = response.headers.get("X-Conversation-Id");
     if (newId && !_conversationId) {
       _conversationId = newId;
-      // Update URL without triggering Next.js navigation (component stays mounted,
-      // stream continues). This is the official App Router pattern for shallow URL updates.
       const currentPath = window.location.pathname;
-      const locale = currentPath.split("/")[1]; // e.g. "tr" or "en"
+      const locale = currentPath.split("/")[1];
       window.history.replaceState(null, "", `/${locale}/chat/${newId}`);
     }
 
@@ -37,6 +39,7 @@ const transport = new DefaultChatTransport({
 
 export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
   const [input, setInput] = useState("");
+  const t = useTranslations("chat");
 
   useEffect(() => {
     _conversationId = chatId ?? null;
@@ -51,8 +54,16 @@ export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
     transport,
   };
 
-  const { messages, sendMessage, status, error } = useChat(chatHookProps);
+  const { messages, sendMessage, setMessages, status, error } =
+    useChat(chatHookProps);
   const isLoading = status === "streaming" || status === "submitted";
+
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    _conversationId = null;
+    const locale = window.location.pathname.split("/")[1];
+    window.history.replaceState(null, "", `/${locale}/chat`);
+  }, [setMessages]);
 
   const handleSend = useCallback(
     (text?: string) => {
@@ -82,7 +93,23 @@ export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
       {messages.length === 0 ? (
         <ChatEmptyState onSuggestionClick={(text) => handleSend(text)} />
       ) : (
-        <ChatMessageList messages={messages} status={status} />
+        <>
+          <div className="flex justify-end px-4 pt-2">
+            <Button
+              onClick={handleNewChat}
+              disabled={isLoading}
+              variant="ghost"
+              size="sm"
+              className="text-destructive/70 hover:text-destructive"
+              aria-label={t("clearChat")}
+              title={t("clearChat")}
+            >
+              <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4" />
+              {t("clearChat")}
+            </Button>
+          </div>
+          <ChatMessageList messages={messages} status={status} />
+        </>
       )}
 
       <ChatInput
