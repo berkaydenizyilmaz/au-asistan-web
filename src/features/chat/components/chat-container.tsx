@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons";
 
+import { useAuthStore } from "@/stores/auth-store";
 import { Button } from "@/components/ui/button";
 import { ChatEmptyState } from "./chat-empty-state";
 import { ChatMessageList } from "./chat-message-list";
@@ -40,6 +41,8 @@ const transport = new DefaultChatTransport({
 export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
   const [input, setInput] = useState("");
   const t = useTranslations("chat");
+  const user = useAuthStore((s) => s.user);
+  const isGuest = !user;
 
   useEffect(() => {
     _conversationId = chatId ?? null;
@@ -94,20 +97,22 @@ export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
         <ChatEmptyState onSuggestionClick={(text) => handleSend(text)} />
       ) : (
         <>
-          <div className="flex justify-end px-4 pt-2">
-            <Button
-              onClick={handleNewChat}
-              disabled={isLoading}
-              variant="ghost"
-              size="sm"
-              className="text-destructive/70 hover:text-destructive"
-              aria-label={t("clearChat")}
-              title={t("clearChat")}
-            >
-              <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4" />
-              {t("clearChat")}
-            </Button>
-          </div>
+          {isGuest && (
+            <div className="flex justify-end px-4 pt-2">
+              <Button
+                onClick={handleNewChat}
+                disabled={isLoading}
+                variant="ghost"
+                size="sm"
+                className="text-destructive/70 hover:text-destructive"
+                aria-label={t("clearChat")}
+                title={t("clearChat")}
+              >
+                <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4" />
+                {t("clearChat")}
+              </Button>
+            </div>
+          )}
           <ChatMessageList messages={messages} status={status} />
         </>
       )}

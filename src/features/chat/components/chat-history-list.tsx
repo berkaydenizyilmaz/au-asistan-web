@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import {
@@ -20,6 +20,7 @@ import type { ConversationDTO } from "../types";
 export function ChatHistoryList() {
   const t = useTranslations("chat");
   const pathname = usePathname();
+  const router = useRouter();
   const [conversations, setConversations] = useState<ConversationDTO[]>([]);
 
   useEffect(() => {
@@ -42,6 +43,10 @@ export function ChatHistoryList() {
     try {
       await apiFetch(`/api/conversations/${id}`, { method: "DELETE" });
       setConversations((prev) => prev.filter((c) => c.id !== id));
+
+      if (pathname === `/chat/${id}`) {
+        router.replace("/chat");
+      }
     } catch (error) {
       logger.error("Failed to delete conversation", error);
     }
