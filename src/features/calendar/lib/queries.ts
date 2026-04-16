@@ -37,7 +37,6 @@ export async function getCalendarEvents(academicYear: string) {
 export async function getActiveAcademicYear(): Promise<string | null> {
   const db = await createDrizzleSupabaseClient();
 
-  // Find the most recent academic year by looking at the latest event
   const latest = await db.admin
     .select({
       academicYear: academicCalendar.academicYear,
@@ -52,7 +51,6 @@ export async function getActiveAcademicYear(): Promise<string | null> {
 
   const { academicYear, maxEndDate } = latest[0];
 
-  // Check if the academic year is still active (last event + 7 days grace)
   const lastDate = new Date(maxEndDate);
   lastDate.setDate(lastDate.getDate() + 7);
   const graceStr = lastDate.toISOString().split("T")[0];

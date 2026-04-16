@@ -12,7 +12,6 @@ export async function replaceCalendarEvents(events: ParsedCalendarEvent[]) {
   const academicYear = events[0].academicYear;
   const db = await createDrizzleSupabaseClient();
 
-  // Delete all existing events for this academic year, then insert fresh
   await db.admin.delete(academicCalendar).where(
     eq(academicCalendar.academicYear, academicYear),
   );

@@ -23,15 +23,11 @@ const TURKISH_MONTHS: Record<string, string> = {
 
 const MONTH_PATTERN = Object.keys(TURKISH_MONTHS).join("|");
 
-// Matches Turkish date patterns anywhere in text (no $ anchor — works on continuous text):
-// "5 Eylül 2025", "8-12 Eylül 2025", "8 Kasım - 30 Kasım 2025",
-// "26 Ocak-1 Şubat 2026", "31 Ağustos – 11 Eylül 2026"
 const DATE_REGEX_GLOBAL = new RegExp(
   `(\\d{1,2})(?:\\s*[-–]\\s*(\\d{1,2}))?\\s+(${MONTH_PATTERN})(?:\\s*[-–]\\s*(\\d{1,2})\\s+(${MONTH_PATTERN}))?\\s+(\\d{4})`,
   "g",
 );
 
-// Noise patterns to strip from extracted titles
 const TITLE_NOISE_PATTERNS = [
   /AMASYA\s+ÜNİVERSİTESİ.*?AKADEMİK\s+TAKVİMİ/gi,
   /\(LİSANS[^)]*\)/gi,
@@ -56,8 +52,6 @@ function parseEvents(text: string): ParsedCalendarEvent[] {
   const academicYear = parseAcademicYear(text);
   if (!academicYear) return [];
 
-  // PDF text comes as a single continuous string (no newlines, no double spaces).
-  // Strategy: find all date matches, extract the text between consecutive dates as titles.
   const matches = [...text.matchAll(DATE_REGEX_GLOBAL)];
   if (matches.length === 0) return [];
 
@@ -75,10 +69,8 @@ function parseEvents(text: string): ParsedCalendarEvent[] {
       currentSemester = "spring";
     }
 
-    // Stop at explanation section
     if (/Açıklama/i.test(textBefore)) break;
 
-    // Clean title: remove header noise, semester markers, extra whitespace
     let title = textBefore;
     for (const pattern of TITLE_NOISE_PATTERNS) {
       title = title.replace(pattern, "");
@@ -129,7 +121,6 @@ async function findLatestCalendarPdfUrl(): Promise<string> {
   const html = await response.text();
   const $ = cheerio.load(html);
 
-  // Find the first calendar link (most recent year)
   const firstLink = $("a[href*='akademik-takvim']").first();
   if (!firstLink.length) {
     throw new AppError({
@@ -206,12 +197,6 @@ async function extractPdfText(url: string): Promise<string> {
   return text as string;
 }
 
-/**
- * Spring events whose start date falls in the first year of the academic year
- * are misclassified by the PDF parser — the university places them at the end
- * of the spring section, but they chronologically precede the fall semester.
- * Move them to "fall" and place them at the very beginning of the event list.
- */
 function correctSemesterAssignment(
   events: ParsedCalendarEvent[],
 ): ParsedCalendarEvent[] {
