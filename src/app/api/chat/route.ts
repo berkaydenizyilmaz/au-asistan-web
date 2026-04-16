@@ -1,7 +1,8 @@
-import { type UIMessage, convertToModelMessages, streamText } from "ai";
+import { type UIMessage, convertToModelMessages, stepCountIs, streamText } from "ai";
 
 import { getChatModel } from "@/lib/ai/provider";
 import { getSystemPrompt } from "@/lib/ai/system-prompt";
+import { chatTools } from "@/lib/ai/tools";
 import { getOptionalUser } from "@/lib/auth/server";
 import { logger } from "@/lib/logger";
 import {
@@ -11,7 +12,7 @@ import {
 } from "@/features/chat/lib/mutations";
 import { extractTextContent } from "@/features/chat/lib/message-utils";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const {
@@ -47,12 +48,22 @@ export async function POST(req: Request) {
     model: getChatModel(),
     system: getSystemPrompt(),
     messages: await convertToModelMessages(messages),
-    onFinish: async ({ text }) => {
+    tools: chatTools,
+    stopWhen: stepCountIs(5),
+    onFinish: async ({ text, steps }) => {
       if (!user || !conversationId) return;
 
       try {
+        const allToolCalls = steps
+          .flatMap((step) => step.toolCalls ?? [])
+          .map(({ toolName, input }) => ({ toolName, args: input }));
+
         await saveMessages(conversationId, [
-          { role: "assistant", content: text },
+          {
+            role: "assistant",
+            content: text,
+            toolCalls: allToolCalls.length > 0 ? allToolCalls : undefined,
+          },
         ]);
         await updateConversationTimestamp(conversationId);
       } catch (error) {

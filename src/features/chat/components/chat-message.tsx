@@ -31,6 +31,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
             case "text":
               return <span key={i}>{part.text}</span>;
             default:
+              if (part.type.startsWith("tool-")) {
+                const toolPart = part as { type: string; state: string };
+                if (toolPart.state === "input-available") {
+                  return (
+                    <div key={i} className="flex items-center gap-1.5 py-1 text-xs text-muted-foreground">
+                      <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50" />
+                      Bilgi aranıyor...
+                    </div>
+                  );
+                }
+              }
               return null;
           }
         })}
