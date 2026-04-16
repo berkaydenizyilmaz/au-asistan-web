@@ -116,27 +116,25 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {user && (
-          <>
-            <SidebarSeparator />
-            <SidebarGroup>
-              <SidebarGroupLabel>{t("chatHistory")}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip={t("newChat")}>
-                      <Link href="/chat">
-                        <HugeiconsIcon icon={Add01Icon} />
-                        <span>{t("newChat")}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-                <ChatHistoryList />
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
+        <SidebarSeparator />
+        <SidebarGroup>
+          {user && (
+            <SidebarGroupLabel>{t("chatHistory")}</SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip={t("newChat")}>
+                  <Link href="/chat">
+                    <HugeiconsIcon icon={Add01Icon} />
+                    <span>{t("newChat")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            {user && <ChatHistoryList />}
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
