@@ -1,17 +1,27 @@
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { setRequestLocale } from "next-intl/server";
+
+import { getConversation } from "@/features/chat/lib/queries";
+import { toUIMessages } from "@/features/chat/lib/message-utils";
+import { ChatContainer } from "@/features/chat/components/chat-container";
 
 interface ChatDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
 }
 
 export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
-  const { locale } = await params;
+  const { locale, id } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations({ locale, namespace: "common" });
+
+  const conversation = await getConversation(id);
+  if (!conversation) notFound();
 
   return (
-    <div>
-      <p className="text-muted-foreground">{t("comingSoon")}</p>
+    <div className="-m-4 h-[calc(100dvh-(--spacing(14)))] md:-m-6">
+      <ChatContainer
+        chatId={conversation.id}
+        initialMessages={toUIMessages(conversation.messages)}
+      />
     </div>
   );
 }

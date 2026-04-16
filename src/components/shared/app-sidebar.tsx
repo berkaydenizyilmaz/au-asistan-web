@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { signOut } from "@/features/auth/lib/auth-actions";
+import { ChatHistoryList } from "@/features/chat/components/chat-history-list";
 import { logger } from "@/lib/logger";
 import {
   Sidebar,
@@ -131,6 +132,7 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
+                <ChatHistoryList />
               </SidebarGroupContent>
             </SidebarGroup>
           </>

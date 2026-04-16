@@ -145,7 +145,10 @@
     "emptyDescription": "Amasya Üniversitesi hakkında her şeyi sorabilirsiniz.",
     "suggestMeals": "Bugünkü yemek ne?",
     "suggestCalendar": "Akademik takvimde yaklaşan olaylar",
-    "suggestEvents": "Yaklaşan etkinlikler neler?"
+    "suggestEvents": "Yaklaşan etkinlikler neler?",
+    "untitled": "Yeni Sohbet",
+    "deleteConversation": "Sohbeti sil",
+    "conversationNotFound": "Sohbet bulunamadı"
   },
   "nav": {
     "home": "Ana Sayfa",

@@ -145,7 +145,10 @@
     "emptyDescription": "Ask anything about Amasya University.",
     "suggestMeals": "What's today's meal?",
     "suggestCalendar": "Upcoming academic calendar events",
-    "suggestEvents": "What events are coming up?"
+    "suggestEvents": "What events are coming up?",
+    "untitled": "New Chat",
+    "deleteConversation": "Delete conversation",
+    "conversationNotFound": "Conversation not found"
   },
   "nav": {
     "home": "Home",
