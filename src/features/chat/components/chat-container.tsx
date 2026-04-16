@@ -44,13 +44,6 @@ export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
   const user = useAuthStore((s) => s.user);
   const isGuest = !user;
 
-  useEffect(() => {
-    _conversationId = chatId ?? null;
-    return () => {
-      _conversationId = null;
-    };
-  }, [chatId]);
-
   const chatHookProps = {
     ...(chatId && { id: chatId }),
     ...(initialMessages && { messages: initialMessages }),
@@ -59,6 +52,18 @@ export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
 
   const { messages, sendMessage, setMessages, status, error } =
     useChat(chatHookProps);
+
+  useEffect(() => {
+    _conversationId = chatId ?? null;
+
+    if (!chatId) {
+      setMessages([]);
+    }
+
+    return () => {
+      _conversationId = null;
+    };
+  }, [chatId, setMessages]);
   const isLoading = status === "streaming" || status === "submitted";
 
   const handleNewChat = useCallback(() => {
