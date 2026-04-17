@@ -1,13 +1,13 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
-import { conversations, messages } from "@/lib/db/schema/chat";
+import { conversations, messages, messageFeedback } from "@/lib/db/schema/chat";
 import { requireUserId } from "@/lib/auth/server";
 import { NotFoundError } from "@/lib/errors";
 import { parseOrThrow, uuidString } from "@/lib/validation";
-import { updateConversationTitleSchema } from "./validators";
+import { messageFeedbackInputSchema, updateConversationTitleSchema } from "./validators";
 
 export async function createConversation(title?: string): Promise<string> {
   const userId = await requireUserId();
@@ -25,7 +25,7 @@ export async function createConversation(title?: string): Promise<string> {
 
 export async function saveMessages(
   conversationId: string,
-  msgs: { role: string; content: string; toolCalls?: unknown }[],
+  msgs: { id?: string; role: string; content: string; toolCalls?: unknown }[],
 ) {
   await requireUserId();
   parseOrThrow(uuidString, conversationId, "Invalid conversation ID");
@@ -35,6 +35,7 @@ export async function saveMessages(
   await db.rls((tx) =>
     tx.insert(messages).values(
       msgs.map((m) => ({
+        ...(m.id ? { id: m.id } : {}),
         conversationId,
         role: m.role,
         content: m.content,
@@ -91,4 +92,45 @@ export async function deleteConversation(id: string) {
   );
 
   if (rows.length === 0) throw new NotFoundError("Conversation not found");
+}
+
+export async function upsertMessageFeedback(
+  messageId: string,
+  input: unknown,
+): Promise<void> {
+  const userId = await requireUserId();
+  parseOrThrow(uuidString, messageId, "Invalid message ID");
+  const { rating } = parseOrThrow(
+    messageFeedbackInputSchema,
+    input,
+    "Rating must be \"like\" or \"dislike\"",
+  );
+
+  const db = await createDrizzleSupabaseClient();
+  await db.rls((tx) =>
+    tx
+      .insert(messageFeedback)
+      .values({ messageId, userId, rating })
+      .onConflictDoUpdate({
+        target: [messageFeedback.messageId, messageFeedback.userId],
+        set: { rating },
+      }),
+  );
+}
+
+export async function deleteMessageFeedback(messageId: string): Promise<void> {
+  const userId = await requireUserId();
+  parseOrThrow(uuidString, messageId, "Invalid message ID");
+
+  const db = await createDrizzleSupabaseClient();
+  await db.rls((tx) =>
+    tx
+      .delete(messageFeedback)
+      .where(
+        and(
+          eq(messageFeedback.messageId, messageId),
+          eq(messageFeedback.userId, userId),
+        ),
+      ),
+  );
 }

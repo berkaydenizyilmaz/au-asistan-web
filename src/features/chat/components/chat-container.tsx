@@ -9,6 +9,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons";
 
 import { useAuthStore } from "@/stores/auth-store";
+import { apiFetch } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { ChatEmptyState } from "./chat-empty-state";
 import { ChatMessageList } from "./chat-message-list";
@@ -17,6 +19,7 @@ import { ChatInput } from "./chat-input";
 interface ChatContainerProps {
   chatId?: string;
   initialMessages?: UIMessage[];
+  initialFeedback?: Record<string, "like" | "dislike">;
 }
 
 let _conversationId: string | null = null;
@@ -38,8 +41,15 @@ const transport = new DefaultChatTransport({
   },
 });
 
-export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
+export function ChatContainer({
+  chatId,
+  initialMessages,
+  initialFeedback,
+}: ChatContainerProps) {
   const [input, setInput] = useState("");
+  const [feedbackMap, setFeedbackMap] = useState<Record<string, "like" | "dislike">>(
+    initialFeedback ?? {},
+  );
   const t = useTranslations("chat");
   const user = useAuthStore((s) => s.user);
   const isGuest = !user;
@@ -58,20 +68,67 @@ export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
 
     if (!chatId) {
       setMessages([]);
+      setFeedbackMap({});
     }
 
     return () => {
       _conversationId = null;
     };
   }, [chatId, setMessages]);
+
   const isLoading = status === "streaming" || status === "submitted";
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
+    setFeedbackMap({});
     _conversationId = null;
     const locale = window.location.pathname.split("/")[1];
     window.history.replaceState(null, "", `/${locale}/chat`);
   }, [setMessages]);
+
+  const handleFeedback = useCallback(
+    async (messageId: string, rating: "like" | "dislike") => {
+      const prev = feedbackMap[messageId];
+      const isToggleOff = prev === rating;
+
+      // Optimistic update
+      setFeedbackMap((current) => {
+        const next = { ...current };
+        if (isToggleOff) {
+          delete next[messageId];
+        } else {
+          next[messageId] = rating;
+        }
+        return next;
+      });
+
+      try {
+        if (isToggleOff) {
+          await apiFetch(`/api/chat/messages/${messageId}/feedback`, {
+            method: "DELETE",
+          });
+        } else {
+          await apiFetch(`/api/chat/messages/${messageId}/feedback`, {
+            method: "POST",
+            body: JSON.stringify({ rating }),
+          });
+        }
+      } catch (error) {
+        logger.error("Failed to save feedback", error);
+        // Revert optimistic update
+        setFeedbackMap((current) => {
+          const reverted = { ...current };
+          if (prev) {
+            reverted[messageId] = prev;
+          } else {
+            delete reverted[messageId];
+          }
+          return reverted;
+        });
+      }
+    },
+    [feedbackMap],
+  );
 
   const handleSend = useCallback(
     (text?: string) => {
@@ -118,7 +175,13 @@ export function ChatContainer({ chatId, initialMessages }: ChatContainerProps) {
               </Button>
             </div>
           )}
-          <ChatMessageList messages={messages} status={status} />
+          <ChatMessageList
+            messages={messages}
+            status={status}
+            feedbackMap={feedbackMap}
+            onFeedback={handleFeedback}
+            showFeedback={!isGuest}
+          />
         </>
       )}
 

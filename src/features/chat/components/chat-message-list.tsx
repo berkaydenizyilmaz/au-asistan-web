@@ -8,13 +8,22 @@ import { ChatMessage } from "./chat-message";
 interface ChatMessageListProps {
   messages: UIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
+  feedbackMap?: Record<string, "like" | "dislike">;
+  onFeedback?: (messageId: string, rating: "like" | "dislike") => void;
+  showFeedback?: boolean;
 }
 
 function hasText(message: UIMessage) {
   return message.parts.some((p) => p.type === "text" && p.text.length > 0);
 }
 
-export function ChatMessageList({ messages, status }: ChatMessageListProps) {
+export function ChatMessageList({
+  messages,
+  status,
+  feedbackMap,
+  onFeedback,
+  showFeedback,
+}: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,7 +44,21 @@ export function ChatMessageList({ messages, status }: ChatMessageListProps) {
           if (showLoading && message.role === "assistant" && !hasText(message)) {
             return null;
           }
-          return <ChatMessage key={message.id} message={message} />;
+          const isLastStreaming =
+            status === "streaming" && message === lastMessage;
+          return (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              feedback={feedbackMap?.[message.id] ?? null}
+              onFeedback={(rating) => onFeedback?.(message.id, rating)}
+              showFeedback={
+                showFeedback &&
+                message.role === "assistant" &&
+                !isLastStreaming
+              }
+            />
+          );
         })}
 
         {showLoading && (

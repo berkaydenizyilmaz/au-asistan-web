@@ -1,9 +1,9 @@
 import "server-only";
 
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
-import { conversations, messages } from "@/lib/db/schema/chat";
+import { conversations, messages, messageFeedback } from "@/lib/db/schema/chat";
 import { requireUserId } from "@/lib/auth/server";
 import { parseOrThrow, uuidString } from "@/lib/validation";
 import type {
@@ -24,19 +24,23 @@ function toConversationDTO(row: {
   };
 }
 
-function toMessageDTO(row: {
-  id: string;
-  role: string;
-  content: string;
-  toolCalls: unknown;
-  createdAt: Date;
-}): MessageDTO {
+function toMessageDTO(
+  row: {
+    id: string;
+    role: string;
+    content: string;
+    toolCalls: unknown;
+    createdAt: Date;
+  },
+  feedback?: string | null,
+): MessageDTO {
   return {
     id: row.id,
     role: row.role as "user" | "assistant",
     content: row.content,
     toolCalls: row.toolCalls ?? null,
     createdAt: row.createdAt.toISOString(),
+    feedback: (feedback as "like" | "dislike") ?? null,
   };
 }
 
@@ -95,8 +99,23 @@ export async function getConversation(
       .orderBy(asc(messages.createdAt))
   );
 
+  const feedbackRows =
+    messageRows.length > 0
+      ? await db.rls((tx) =>
+          tx
+            .select({
+              messageId: messageFeedback.messageId,
+              rating: messageFeedback.rating,
+            })
+            .from(messageFeedback)
+            .where(inArray(messageFeedback.messageId, messageRows.map((m) => m.id)))
+        )
+      : [];
+
+  const feedbackMap = new Map(feedbackRows.map((r) => [r.messageId, r.rating]));
+
   return {
     ...toConversationDTO(conversationRows[0]),
-    messages: messageRows.map(toMessageDTO),
+    messages: messageRows.map((row) => toMessageDTO(row, feedbackMap.get(row.id))),
   };
 }

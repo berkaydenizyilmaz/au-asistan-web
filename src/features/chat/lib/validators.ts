@@ -14,3 +14,7 @@ export const insertMessageSchema = createInsertSchema(messages, {
 export const updateConversationTitleSchema = z.object({
   title: z.string().min(1).max(200),
 });
+
+export const messageFeedbackInputSchema = z.object({
+  rating: z.enum(["like", "dislike"]),
+});

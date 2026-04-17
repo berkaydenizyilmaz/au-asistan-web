@@ -10,6 +10,7 @@ export interface MessageDTO {
   content: string;
   toolCalls: unknown | null;
   createdAt: string;
+  feedback: "like" | "dislike" | null;
 }
 
 export interface ConversationWithMessagesDTO extends ConversationDTO {

@@ -16,11 +16,17 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
   const conversation = await getConversation(id);
   if (!conversation) notFound();
 
+  const initialFeedback: Record<string, "like" | "dislike"> = {};
+  for (const msg of conversation.messages) {
+    if (msg.feedback) initialFeedback[msg.id] = msg.feedback;
+  }
+
   return (
     <div className="-m-4 h-[calc(100dvh-(--spacing(14)))] md:-m-6">
       <ChatContainer
         chatId={conversation.id}
         initialMessages={toUIMessages(conversation.messages)}
+        initialFeedback={initialFeedback}
       />
     </div>
   );

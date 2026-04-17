@@ -23,6 +23,7 @@ export async function POST(req: Request) {
   const user = await getOptionalUser();
   let conversationId = chatId ?? null;
   const isNewConversation = user && !conversationId;
+  const assistantMsgId = user ? crypto.randomUUID() : undefined;
 
   if (isNewConversation) {
     const lastUserMsg = messages[messages.length - 1];
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
 
         await saveMessages(conversationId, [
           {
+            id: assistantMsgId,
             role: "assistant",
             content: text,
             toolCalls: allToolCalls.length > 0 ? allToolCalls : undefined,
@@ -72,7 +74,9 @@ export async function POST(req: Request) {
     },
   });
 
-  const response = result.toUIMessageStreamResponse();
+  const response = result.toUIMessageStreamResponse(
+    assistantMsgId ? { generateMessageId: () => assistantMsgId } : undefined,
+  );
 
   if (isNewConversation && conversationId) {
     response.headers.set("X-Conversation-Id", conversationId);

@@ -150,7 +150,9 @@
     "newChat": "Yeni sohbet",
     "clearChat": "Sohbeti sıfırla",
     "deleteConversation": "Sohbeti sil",
-    "conversationNotFound": "Sohbet bulunamadı"
+    "conversationNotFound": "Sohbet bulunamadı",
+    "feedbackLike": "Beğen",
+    "feedbackDislike": "Beğenme"
   },
   "nav": {
     "home": "Ana Sayfa",

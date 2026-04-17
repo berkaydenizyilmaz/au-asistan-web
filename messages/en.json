@@ -150,7 +150,9 @@
     "newChat": "New chat",
     "clearChat": "Clear chat",
     "deleteConversation": "Delete conversation",
-    "conversationNotFound": "Conversation not found"
+    "conversationNotFound": "Conversation not found",
+    "feedbackLike": "Like",
+    "feedbackDislike": "Dislike"
   },
   "nav": {
     "home": "Home",
