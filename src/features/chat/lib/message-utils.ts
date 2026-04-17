@@ -2,12 +2,42 @@ import type { UIMessage } from "ai";
 
 import type { MessageDTO } from "../types";
 
+interface StoredToolCall {
+  toolCallId: string;
+  toolName: string;
+  args: unknown;
+  result?: unknown;
+}
+
 export function toUIMessages(dbMessages: MessageDTO[]): UIMessage[] {
-  return dbMessages.map((msg) => ({
-    id: msg.id,
-    role: msg.role,
-    parts: [{ type: "text" as const, text: msg.content }],
-  }));
+  return dbMessages.map((msg) => {
+    const parts: UIMessage["parts"] = [];
+
+    if (msg.role === "assistant" && Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
+      for (const tc of msg.toolCalls as StoredToolCall[]) {
+        if (tc.toolCallId && tc.result !== undefined) {
+          parts.push({
+            type: "tool-invocation",
+            toolInvocation: {
+              state: "result",
+              toolCallId: tc.toolCallId,
+              toolName: tc.toolName,
+              args: tc.args,
+              result: tc.result,
+            },
+          });
+        }
+      }
+    }
+
+    parts.push({ type: "text", text: msg.content });
+
+    return {
+      id: msg.id,
+      role: msg.role,
+      parts,
+    };
+  });
 }
 
 export function extractTextContent(message: UIMessage): string {

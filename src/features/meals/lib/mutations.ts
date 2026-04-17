@@ -25,26 +25,15 @@ export async function upsertMealRating(mealId: string, rating: unknown) {
   }
 
   const db = await createDrizzleSupabaseClient();
-  await db.rls(async (tx) => {
-    const existing = await tx
-      .select({ id: mealRatings.id })
-      .from(mealRatings)
-      .where(
-        and(eq(mealRatings.mealId, mealId), eq(mealRatings.userId, userId)),
-      )
-      .limit(1);
-
-    if (existing.length > 0) {
-      await tx
-        .update(mealRatings)
-        .set({ rating: parsed.rating })
-        .where(eq(mealRatings.id, existing[0].id));
-    } else {
-      await tx
-        .insert(mealRatings)
-        .values({ mealId, userId, rating: parsed.rating });
-    }
-  });
+  await db.rls((tx) =>
+    tx
+      .insert(mealRatings)
+      .values({ mealId, userId, rating: parsed.rating })
+      .onConflictDoUpdate({
+        target: [mealRatings.mealId, mealRatings.userId],
+        set: { rating: parsed.rating },
+      }),
+  );
 }
 
 export async function deleteMealRating(mealId: string) {
