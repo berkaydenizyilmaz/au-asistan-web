@@ -59,7 +59,7 @@ export async function POST(req: Request) {
         try {
           const allToolCalls = steps.flatMap((step) => {
             const resultMap = new Map(
-              (step.toolResults ?? []).map((r) => [r.toolCallId, r.result]),
+              (step.toolResults ?? []).map((r) => [r.toolCallId, r.output]),
             );
             return (step.toolCalls ?? []).map(({ toolCallId, toolName, input }) => ({
               toolCallId,
