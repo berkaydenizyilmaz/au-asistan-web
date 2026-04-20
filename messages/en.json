@@ -138,6 +138,22 @@
       "12": "December"
     }
   },
+  "announcements": {
+    "title": "Announcements",
+    "noAnnouncements": "No announcements yet.",
+    "allCategories": "All",
+    "readMore": "Read More",
+    "source": "Source"
+  },
+  "events": {
+    "title": "Events",
+    "noEvents": "No upcoming events.",
+    "allCategories": "All",
+    "organizer": "Organizer",
+    "location": "Location",
+    "upcoming": "Upcoming",
+    "past": "Past"
+  },
   "chat": {
     "placeholder": "Type your message...",
     "send": "Send",

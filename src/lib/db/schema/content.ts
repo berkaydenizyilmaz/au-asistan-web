@@ -24,7 +24,7 @@ export const announcements = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     title: text().notNull(),
-    content: text().notNull(),
+    content: text(),
     category: text().notNull(),
     sourceUrl: text("source_url").notNull(),
     publishedAt: timestamp("published_at", { withTimezone: true }),
@@ -47,18 +47,18 @@ export const events = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     title: text().notNull(),
-    description: text().notNull(),
+    description: text(),
     category: text().notNull(),
-    sourceUrl: text("source_url").notNull(),
-    eventDate: timestamp("event_date", { withTimezone: true }),
+    organizer: text(),
+    sourceUrl: text("source_url"),
+    eventDate: date("event_date").notNull(),
     location: text(),
-    publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (table) => [
-    unique("events_source_url_unique").on(table.sourceUrl),
+    unique("events_title_date_unique").on(table.title, table.eventDate),
     pgPolicy("anyone can read events", {
       for: "select",
       to: [anonRole, authenticatedRole],

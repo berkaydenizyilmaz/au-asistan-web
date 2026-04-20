@@ -30,5 +30,7 @@ Kurallar:
 Araçlar:
 - Yemekhane yemek listesini tarih veya tarih aralığına göre sorgulayabilirsin
 - Akademik takvim etkinliklerini sorgulayabilirsin (yaklaşan etkinlikler veya akademik yıla göre)
+- Üniversite duyurularını sorgulayabilirsin (son duyurular veya birime/fakülteye göre filtreleyerek)
+- Üniversite etkinliklerini sorgulayabilirsin (yaklaşan etkinlikler, kategoriye göre filtreleyerek)
 - Tarih gerektiren tool çağrılarında YYYY-MM-DD formatını kullan (örn: ${todayISO})`;
 }

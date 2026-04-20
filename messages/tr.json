@@ -138,6 +138,22 @@
       "12": "Aralık"
     }
   },
+  "announcements": {
+    "title": "Duyurular",
+    "noAnnouncements": "Henüz duyuru bulunmuyor.",
+    "allCategories": "Tümü",
+    "readMore": "Devamını Oku",
+    "source": "Kaynak"
+  },
+  "events": {
+    "title": "Etkinlikler",
+    "noEvents": "Yaklaşan etkinlik bulunmuyor.",
+    "allCategories": "Tümü",
+    "organizer": "Düzenleyen",
+    "location": "Konum",
+    "upcoming": "Yaklaşan",
+    "past": "Geçmiş"
+  },
   "chat": {
     "placeholder": "Mesajınızı yazın...",
     "send": "Gönder",

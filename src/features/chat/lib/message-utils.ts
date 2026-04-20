@@ -17,14 +17,12 @@ export function toUIMessages(dbMessages: MessageDTO[]): UIMessage[] {
       for (const tc of msg.toolCalls as StoredToolCall[]) {
         if (tc.toolCallId && tc.result !== undefined) {
           parts.push({
-            type: "tool-invocation",
-            toolInvocation: {
-              state: "result",
-              toolCallId: tc.toolCallId,
-              toolName: tc.toolName,
-              args: tc.args,
-              result: tc.result,
-            },
+            type: "dynamic-tool",
+            toolCallId: tc.toolCallId,
+            toolName: tc.toolName,
+            state: "output-available",
+            input: tc.args,
+            output: tc.result,
           });
         }
       }
