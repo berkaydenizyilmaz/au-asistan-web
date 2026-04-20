@@ -21,7 +21,23 @@
     "loading": "Yükleniyor..."
   },
   "home": {
-    "title": "Amasya Üniversitesi Asistanı"
+    "title": "Amasya Üniversitesi Asistanı",
+    "subtitle": "Üniversite hakkında her şeyi sorabilirsiniz.",
+    "chatPlaceholder": "Bir şeyler sorun...",
+    "askButton": "Sor",
+    "suggestMeals": "Bugünkü yemek ne?",
+    "suggestCalendar": "Yaklaşan akademik etkinlikler",
+    "suggestAnnouncements": "Son duyurular neler?",
+    "suggestEvents": "Bu ay hangi etkinlikler var?",
+    "todaysMeal": "Bugünkü Yemek",
+    "upcomingCalendar": "Akademik Takvim",
+    "recentAnnouncements": "Son Duyurular",
+    "upcomingEvents": "Yaklaşan Etkinlikler",
+    "viewAll": "Tümünü Gör",
+    "noMealToday": "Bugün için yemek listesi yok.",
+    "noCalendarEvents": "Yaklaşan takvim etkinliği yok.",
+    "noAnnouncements": "Henüz duyuru yok.",
+    "noEvents": "Önümüzdeki 30 günde etkinlik yok."
   },
   "auth": {
     "loginTitle": "Giriş Yap",

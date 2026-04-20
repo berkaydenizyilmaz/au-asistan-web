@@ -21,7 +21,23 @@
     "loading": "Loading..."
   },
   "home": {
-    "title": "Amasya University Assistant"
+    "title": "Amasya University Assistant",
+    "subtitle": "Ask anything about the university.",
+    "chatPlaceholder": "Ask something...",
+    "askButton": "Ask",
+    "suggestMeals": "What's today's meal?",
+    "suggestCalendar": "Upcoming academic events",
+    "suggestAnnouncements": "Latest announcements",
+    "suggestEvents": "What events are this month?",
+    "todaysMeal": "Today's Meal",
+    "upcomingCalendar": "Academic Calendar",
+    "recentAnnouncements": "Recent Announcements",
+    "upcomingEvents": "Upcoming Events",
+    "viewAll": "View All",
+    "noMealToday": "No meal list for today.",
+    "noCalendarEvents": "No upcoming calendar events.",
+    "noAnnouncements": "No announcements yet.",
+    "noEvents": "No events in the next 30 days."
   },
   "auth": {
     "loginTitle": "Sign In",

@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -20,6 +20,7 @@ interface ChatContainerProps {
   chatId?: string;
   initialMessages?: UIMessage[];
   initialFeedback?: Record<string, "like" | "dislike">;
+  autoSend?: string;
 }
 
 let _conversationId: string | null = null;
@@ -45,6 +46,7 @@ export function ChatContainer({
   chatId,
   initialMessages,
   initialFeedback,
+  autoSend,
 }: ChatContainerProps) {
   const [input, setInput] = useState("");
   const [feedbackMap, setFeedbackMap] = useState<Record<string, "like" | "dislike">>(
@@ -66,15 +68,10 @@ export function ChatContainer({
   useEffect(() => {
     _conversationId = chatId ?? null;
 
-    if (!chatId) {
-      setMessages([]);
-      setFeedbackMap({});
-    }
-
     return () => {
       _conversationId = null;
     };
-  }, [chatId, setMessages]);
+  }, [chatId]);
 
   const isLoading = status === "streaming" || status === "submitted";
 
@@ -146,6 +143,20 @@ export function ChatContainer({
     },
     [input, isLoading, sendMessage],
   );
+
+  // Auto-send a message when navigated from dashboard with ?q= param
+  const autoSentRef = useRef(false);
+  const handleSendRef = useRef(handleSend);
+  useLayoutEffect(() => {
+    handleSendRef.current = handleSend;
+  });
+
+  useEffect(() => {
+    if (autoSend && !autoSentRef.current) {
+      autoSentRef.current = true;
+      handleSendRef.current(autoSend);
+    }
+  }, [autoSend]);
 
   return (
     <div className="flex h-full flex-col">
