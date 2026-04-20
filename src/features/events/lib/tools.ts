@@ -3,36 +3,20 @@ import "server-only";
 import { tool } from "ai";
 import { z } from "zod";
 
-import { getUpcomingEvents } from "./queries";
+import { getEventsForAI } from "./queries";
 
 export const eventTools = {
   getUpcomingEvents: tool({
     description:
-      "Yaklaşan üniversite etkinliklerini getirir. Kullanıcı etkinlikleri, konserleri, konferansları, seminerleri veya sosyal aktiviteleri sorduğunda kullan.",
-    inputSchema: z.object({
-      category: z
-        .string()
-        .optional()
-        .describe(
-          "Etkinlik kategorisi (örn: 'Konferans', 'Konser', 'Eğitim', 'Gezi'). Belirtilmezse tüm kategorilerden etkinlikler döner.",
-        ),
-      limit: z
-        .number()
-        .int()
-        .min(1)
-        .max(20)
-        .default(5)
-        .describe("Kaç etkinlik getirileceği. Varsayılan: 5"),
-    }),
-    execute: async ({ category, limit }) => {
+      "Bugün ve önümüzdeki 30 gün içindeki üniversite etkinliklerini getirir. Kullanıcı etkinlikleri, konserleri, konferansları, seminerleri, spor etkinliklerini veya sosyal aktiviteleri sorduğunda kullan. Kategori, tarih veya konu bazlı filtrelemeyi kendin yap.",
+    inputSchema: z.object({}),
+    execute: async () => {
       try {
-        const results = await getUpcomingEvents(limit, category);
+        const results = await getEventsForAI();
         if (results.length === 0) {
           return {
             found: false,
-            message: category
-              ? `${category} kategorisinde yaklaşan etkinlik bulunamadı.`
-              : "Yaklaşan etkinlik bulunmuyor.",
+            message: "Önümüzdeki 30 gün içinde etkinlik bulunmuyor.",
           };
         }
         return {

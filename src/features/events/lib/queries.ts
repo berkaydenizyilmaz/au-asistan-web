@@ -1,10 +1,10 @@
 import "server-only";
 
-import { and, asc, eq, gte } from "drizzle-orm";
+import { and, asc, eq, gte, lte } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { events } from "@/lib/db/schema/content";
-import { getTodayStr } from "@/lib/date";
+import { formatDateInTimezone, getTodayStr } from "@/lib/date";
 import { parseOrThrow } from "@/lib/validation";
 import type { EventDTO } from "../types";
 import { eventQuerySchema } from "./validators";
@@ -54,6 +54,23 @@ export async function getUpcomingEvents(
     )
     .orderBy(asc(events.eventDate))
     .limit(parsed.limit);
+
+  return rows.map(toEventDTO);
+}
+
+export async function getEventsForAI(limit = 50): Promise<EventDTO[]> {
+  const today = getTodayStr();
+  const thirtyDaysLater = new Date();
+  thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+  const upperBound = formatDateInTimezone(thirtyDaysLater);
+
+  const db = await createDrizzleSupabaseClient();
+  const rows = await db.admin
+    .select()
+    .from(events)
+    .where(and(gte(events.eventDate, today), lte(events.eventDate, upperBound)))
+    .orderBy(asc(events.eventDate))
+    .limit(limit);
 
   return rows.map(toEventDTO);
 }
