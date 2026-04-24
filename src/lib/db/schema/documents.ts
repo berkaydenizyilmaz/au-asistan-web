@@ -1,10 +1,12 @@
 import {
+  boolean,
   foreignKey,
   jsonb,
   pgPolicy,
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
   vector,
 } from "drizzle-orm/pg-core";
@@ -16,9 +18,16 @@ export const documents = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     title: text().notNull(),
-    sourceType: text("source_type").notNull(),
-    sourceUrl: text("source_url"),
-    fileName: text("file_name"),
+    sourceUrl: text("source_url").notNull(),
+    sourceType: text("source_type").notNull(), // "html" | "pdf"
+    domain: text().notNull(),
+    unit: text(),
+    contentHash: text("content_hash"),
+    lastScrapedAt: timestamp("last_scraped_at", { withTimezone: true }),
+    isWatched: boolean("is_watched").notNull().default(false),
+    checkFrequency: text("check_frequency"), // "daily" | "weekly" | "monthly"
+    lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
+    autoIngest: boolean("auto_ingest").notNull().default(false),
     metadata: jsonb().notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -27,7 +36,8 @@ export const documents = pgTable(
       .notNull()
       .defaultNow(),
   },
-  () => [
+  (table) => [
+    unique("documents_source_url_unique").on(table.sourceUrl),
     pgPolicy("anyone can read documents", {
       for: "select",
       to: [anonRole, authenticatedRole],
@@ -42,7 +52,7 @@ export const documentChunks = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     documentId: uuid("document_id").notNull(),
     content: text().notNull(),
-    embedding: vector({ dimensions: 1536 }),
+    embedding: vector({ dimensions: 2560 }),
     metadata: jsonb().notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

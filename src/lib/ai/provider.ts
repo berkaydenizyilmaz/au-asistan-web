@@ -13,3 +13,7 @@ const openai = createOpenAI({
 export function getChatModel() {
   return openai.chat(env.aiChatModel);
 }
+
+export function getEmbeddingModel() {
+  return openai.textEmbeddingModel(env.aiEmbeddingModel);
+}

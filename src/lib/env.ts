@@ -19,4 +19,10 @@ export const env = {
   aiBaseUrl: process.env.AI_BASE_URL ?? "http://localhost:11434/v1",
   aiApiKey: process.env.AI_API_KEY ?? "ollama",
   aiChatModel: process.env.AI_CHAT_MODEL ?? "gemma4:latest",
+
+  aiEmbeddingModel:
+    process.env.AI_EMBEDDING_MODEL ?? "qwen3-embedding:4b",
+  aiEmbeddingDimensions: Number(
+    process.env.AI_EMBEDDING_DIMENSIONS ?? "2560"
+  ),
 } as const;
