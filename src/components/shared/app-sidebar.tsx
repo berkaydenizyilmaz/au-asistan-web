@@ -61,7 +61,6 @@ export function AppSidebar() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const { closeMobileOnly } = useSidebar();
 
-  // Close sidebar on route change (mobile only)
   useEffect(() => {
     closeMobileOnly();
   }, [pathname, closeMobileOnly]);

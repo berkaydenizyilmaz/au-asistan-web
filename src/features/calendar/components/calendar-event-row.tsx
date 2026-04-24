@@ -76,7 +76,6 @@ export function DateBlock({ event, variant = "default" }: DateBlockProps) {
   const endMonthKey = hasRange ? formatMonthKey(event.endDate!) : null;
   const crossMonth = hasRange && startMonthKey !== endMonthKey;
 
-  // Cross-month range — two-line compact pill
   if (crossMonth) {
     const endMonth = t(`months.${endMonthKey}`);
     return (
@@ -106,7 +105,6 @@ export function DateBlock({ event, variant = "default" }: DateBlockProps) {
     );
   }
 
-  // Single day or same-month range — structured block (day hero + month label)
   const dayDisplay = hasRange ? `${startDay}–${endDay}` : String(startDay);
 
   return (

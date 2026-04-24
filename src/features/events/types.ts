@@ -3,7 +3,7 @@ export interface ParsedEvent {
   category: string;
   organizer: string | null;
   location: string | null;
-  eventDate: string; // YYYY-MM-DD
+  eventDate: string;
   sourceUrl: string | null;
 }
 

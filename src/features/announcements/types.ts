@@ -2,7 +2,7 @@ export interface ParsedAnnouncement {
   title: string;
   sourceUrl: string;
   category: string;
-  publishedAt: string; // YYYY-MM-DD
+  publishedAt: string;
 }
 
 export interface AnnouncementDTO {

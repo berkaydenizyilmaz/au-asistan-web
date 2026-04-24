@@ -27,7 +27,6 @@ export async function ingestDocument(params: IngestParams): Promise<string> {
 
   const db = await createDrizzleSupabaseClient();
 
-  // Daha önce eklenmiş mi?
   const existing = await db.admin
     .select({ id: documents.id })
     .from(documents)
@@ -77,11 +76,9 @@ export async function reingestDocument(id: string): Promise<void> {
   const doc = result[0];
   const scraped = await scrapeUrl(doc.sourceUrl);
 
-  // AI çağrıları önce: hata olursa eski chunk'lar silinmemiş olur
   const chunks = await chunkContent(scraped);
   const embeddings = await generateEmbeddings(chunks.map((c) => c.content));
 
-  // AI başarılıysa eski chunk'ları sil ve yenilerini yaz
   await db.admin
     .delete(documentChunks)
     .where(eq(documentChunks.documentId, id));
@@ -149,7 +146,6 @@ export async function checkWatchedDocuments(): Promise<{
 
       if (scraped.contentHash !== doc.contentHash) {
         if (doc.autoIngest) {
-          // AI çağrıları önce — hata olursa eski chunk'lar korunur
           const chunks = await chunkContent(scraped);
           const embeddings = await generateEmbeddings(
             chunks.map((c) => c.content)
@@ -173,7 +169,6 @@ export async function checkWatchedDocuments(): Promise<{
 
           reingested++;
         } else {
-          // autoIngest=false: sadece kontrol zamanını güncelle
           await db.admin
             .update(documents)
             .set({ lastCheckedAt: new Date() })
@@ -186,14 +181,12 @@ export async function checkWatchedDocuments(): Promise<{
           .where(eq(documents.id, doc.id));
       }
     } catch {
-      // Tek bir dökümanın başarısız olması diğerlerini durdurmaz
     }
   }
 
   return { checked, reingested };
 }
 
-// Yardımcı: chunk'ları embedding ile birlikte insert et
 async function insertChunks(
   db: Awaited<ReturnType<typeof createDrizzleSupabaseClient>>,
   documentId: string,

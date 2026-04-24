@@ -62,7 +62,6 @@ export async function crawlSite(
   const visited = new Set<string>();
   const discoveries: CrawlDiscovery[] = [];
 
-  // Sitemap'i dene önce
   const sitemapUrls = await trySitemap(rootUrl);
   if (sitemapUrls.length > 0) {
     for (const url of sitemapUrls.slice(0, maxPages)) {
@@ -72,7 +71,6 @@ export async function crawlSite(
     return discoveries;
   }
 
-  // Sitemap yoksa recursive crawl
   await crawlPage(rootUrl, 0);
 
   return discoveries;
@@ -106,7 +104,6 @@ export async function crawlSite(
     $("a[href]").each((_, el) => {
       const href = $(el).attr("href");
       if (!href) return;
-      // Sadece same-page anchor'ları atla (#top, #section)
       if (href.startsWith("#")) return;
 
       try {
@@ -114,7 +111,6 @@ export async function crawlSite(
         resolved.hash = ""; // fragment'ı temizle — aynı sayfa farklı anchor = tek URL
         links.push(resolved.toString());
       } catch {
-        // geçersiz URL
       }
     });
 

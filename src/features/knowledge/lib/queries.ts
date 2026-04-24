@@ -59,7 +59,6 @@ export async function searchSimilarChunks(
   const db = await createDrizzleSupabaseClient();
   const embeddingLiteral = `[${embedding.join(",")}]`;
 
-  // Unit boost: unit eşleşirse skor 1.3x — hem sıralama hem threshold için boosted skor kullanılır
   const rawSimilarity = sql<number>`(1 - (${documentChunks.embedding} <=> ${embeddingLiteral}::vector))`;
   const boostedSimilarity = options.unit
     ? sql<number>`(1 - (${documentChunks.embedding} <=> ${embeddingLiteral}::vector)) * CASE WHEN ${documents.unit} = ${options.unit} THEN 1.3 ELSE 1.0 END`
@@ -98,7 +97,6 @@ export async function searchWithFallback(
 ): Promise<SearchResult[]> {
   const results = await searchSimilarChunks(embedding, options);
 
-  // Yetersiz sonuç veya düşük benzerlik → filtresiz geniş arama
   const SIMILARITY_THRESHOLD = 0.3;
   const MIN_RESULTS = Math.ceil(options.limit / 2);
 
@@ -108,7 +106,6 @@ export async function searchWithFallback(
     const broadResults = await searchSimilarChunks(embedding, {
       limit: options.limit,
     });
-    // Deduplicate
     const seen = new Set(results.map((r) => r.content));
     const extra = broadResults.filter((r) => !seen.has(r.content));
     return [...goodResults, ...extra].slice(0, options.limit);

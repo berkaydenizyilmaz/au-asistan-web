@@ -87,7 +87,6 @@ async function scrapeHtml(
 
   const $ = cheerio.load(html);
 
-  // Gereksiz elementleri kaldır
   $(
     "nav, footer, header, script, style, noscript, iframe, " +
       ".sidebar, .breadcrumb, .pagination, .social-media, " +
@@ -95,13 +94,11 @@ async function scrapeHtml(
       "[id*='menu'], [id*='nav'], [id*='footer'], [id*='header']"
   ).remove();
 
-  // Başlık
   const title =
     $("h1").first().text().trim() ||
     $("title").text().trim() ||
     new URL(url).pathname;
 
-  // İçerik: önce main/article, yoksa body
   const contentEl =
     $("main").length > 0
       ? $("main")

@@ -4,7 +4,6 @@ import { useEffect } from "react";
 
 export function CalendarAutoScroll() {
   useEffect(() => {
-    // Double rAF ensures layout is fully computed after hydration
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const el = document.getElementById("calendar-anchor");

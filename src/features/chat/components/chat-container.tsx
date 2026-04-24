@@ -88,7 +88,6 @@ export function ChatContainer({
       const prev = feedbackMap[messageId];
       const isToggleOff = prev === rating;
 
-      // Optimistic update
       setFeedbackMap((current) => {
         const next = { ...current };
         if (isToggleOff) {
@@ -112,7 +111,6 @@ export function ChatContainer({
         }
       } catch (error) {
         logger.error("Failed to save feedback", error);
-        // Revert optimistic update
         setFeedbackMap((current) => {
           const reverted = { ...current };
           if (prev) {
@@ -144,7 +142,6 @@ export function ChatContainer({
     [input, isLoading, sendMessage],
   );
 
-  // Auto-send a message when navigated from dashboard with ?q= param
   const autoSentRef = useRef(false);
   const handleSendRef = useRef(handleSend);
   useLayoutEffect(() => {

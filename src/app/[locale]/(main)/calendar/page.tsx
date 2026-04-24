@@ -26,7 +26,6 @@ function detectActiveSemester(
 
   if (hasUpcoming("spring")) return "spring";
   if (hasUpcoming("fall")) return "fall";
-  // Both past — show spring (ends later in the academic year)
   return "spring";
 }
 

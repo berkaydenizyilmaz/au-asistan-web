@@ -15,7 +15,6 @@ export const POST = withErrorHandler(async (request) => {
     maxPages: input.maxPages,
   });
 
-  // AI metadata önerileri üret (paralel)
   const suggestions = await Promise.allSettled(
     discoveries.map(async (d) =>
       suggestMetadata(d.url, d.title ?? "", "").catch(() => ({

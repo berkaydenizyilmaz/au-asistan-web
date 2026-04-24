@@ -94,7 +94,6 @@ export function CalendarTable({ events }: CalendarTableProps) {
     status: getEventStatus(event, today),
   }));
 
-  // Anchor: first non-past event
   const anchorId = tagged.find((t) => t.status !== "past")?.event.id ?? null;
 
   return (
@@ -106,15 +105,12 @@ export function CalendarTable({ events }: CalendarTableProps) {
             id={event.id === anchorId ? "calendar-anchor" : undefined}
             className={cn(
               "flex items-start gap-4 border-l-3 px-4 py-3 sm:gap-6",
-              // Zebra striping
               index % 2 === 0 ? "bg-card" : "bg-muted/20",
-              // Status-based left border
               status === "active"
                 ? "border-l-primary bg-primary/5"
                 : status === "upcoming"
                   ? "border-l-transparent"
                   : "border-l-transparent",
-              // Top border between rows (except first)
               index > 0 && "border-t border-t-border/50",
             )}
           >

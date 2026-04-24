@@ -29,9 +29,6 @@ export async function createClient() {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // setAll is called from Server Components where cookies
-            // cannot be set. This is safe to ignore when proxy handles
-            // session refresh.
           }
         },
       },

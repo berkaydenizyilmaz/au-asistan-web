@@ -216,18 +216,12 @@ function Sidebar({
           data-slot="sidebar-container"
           data-side={side}
           className={cn(
-            // Base: fixed, full-height, hidden off-screen on mobile
             "fixed inset-y-0 z-40 h-svh w-(--sidebar-width) flex flex-col transition-[left,right,width,transform] duration-200 ease-linear",
-            // Mobile: translate-based show/hide (mobileOpen state)
             mobileOpen ? "translate-x-0" : "-translate-x-full",
-            // Desktop: always visible, no translate
             "md:z-10 md:translate-x-0",
-            // Desktop side positioning
             "data-[side=left]:left-0 data-[side=right]:right-0",
-            // Desktop offcanvas collapse
             "data-[side=left]:md:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]",
             "data-[side=right]:md:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-            // Floating/inset variants
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
               : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -588,7 +582,6 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean
 }) {
-  // Random width between 50 to 90%.
   const [width] = React.useState(() => {
     return `${Math.floor(Math.random() * 40) + 50}%`
   })

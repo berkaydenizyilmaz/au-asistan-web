@@ -64,7 +64,6 @@ function parseEvents(text: string): ParsedCalendarEvent[] {
     const textBefore = text.substring(prevEnd, matchIndex).trim();
     prevEnd = matchIndex + match[0].length;
 
-    // Detect semester transitions in the text between dates
     if (/BAHAR\s+YARIYILI/i.test(textBefore)) {
       currentSemester = "spring";
     }
@@ -139,11 +138,9 @@ async function findLatestCalendarPdfUrl(): Promise<string> {
     });
   }
 
-  // Resolve relative URL
   const baseUrl = new URL(CALENDAR_LIST_URL);
   const calendarPageUrl = new URL(href, baseUrl).toString();
 
-  // Follow redirects to get the final PDF URL
   const pdfResponse = await fetch(calendarPageUrl, {
     headers: { "User-Agent": "AU-Asistan/1.0" },
     redirect: "follow",

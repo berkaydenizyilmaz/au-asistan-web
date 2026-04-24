@@ -6,7 +6,7 @@ export interface MealItem {
 }
 
 export interface ParsedMeal {
-  date: string; // YYYY-MM-DD
+  date: string;
   items: MealItem[];
   calories: number | null;
 }

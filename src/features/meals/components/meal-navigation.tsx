@@ -36,7 +36,6 @@ function getSteppedDate(view: ViewMode, year: number, month: number, day: number
     const d = new Date(year, month - 1, day + direction * 7);
     return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
   }
-  // monthly
   let m = month + direction;
   let y = year;
   if (m < 1) { m = 12; y--; }

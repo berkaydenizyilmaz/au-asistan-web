@@ -41,7 +41,6 @@ export function MealRating({ mealId, isToday, initialData }: MealRatingProps) {
       const result = await apiFetch<RatingSummary>(`/api/meals/${mealId}/rate`);
       setData(result);
     } catch {
-      // Rating display is non-critical — fail silently on initial load
     }
   }, [mealId]);
 
@@ -89,7 +88,6 @@ export function MealRating({ mealId, isToday, initialData }: MealRatingProps) {
     }
   }
 
-  // Loading
   if (!data) {
     return (
       <div className="flex justify-center items-center gap-2 border-t border-border/40 mt-2 pt-2">

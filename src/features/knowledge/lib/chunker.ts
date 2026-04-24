@@ -20,7 +20,6 @@ const chunkSchema = z.object({
 export async function chunkContent(
   scraped: ScrapedContent
 ): Promise<ChunkWithContext[]> {
-  // Çok uzun metinleri parçala (model context limiti)
   const MAX_INPUT_LENGTH = 12000;
   const text =
     scraped.text.length > MAX_INPUT_LENGTH
