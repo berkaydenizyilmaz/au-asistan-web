@@ -5,16 +5,16 @@ import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Home03Icon,
-  Restaurant01Icon,
-  Calendar03Icon,
-  Megaphone01Icon,
-  Calendar01Icon,
-  Settings02Icon,
-  Add01Icon,
-  Login01Icon,
+  Database01Icon,
+  ChartHistogramIcon,
+  MessageMultiple01Icon,
+  UserGroupIcon,
+  Clock01Icon,
+  FileEditIcon,
+  ArrowLeft01Icon,
   Logout01Icon,
+  Settings02Icon,
   ChevronsUpDown,
-  Settings01Icon,
 } from "@hugeicons/core-free-icons";
 
 import { toast } from "sonner";
@@ -22,7 +22,6 @@ import { toast } from "sonner";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { signOut } from "@/features/auth/lib/auth-actions";
-import { ChatHistoryList } from "@/features/chat/components/chat-history-list";
 import { logger } from "@/lib/logger";
 import {
   Sidebar,
@@ -30,7 +29,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -47,16 +45,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const NAV_ITEMS = [
-  { key: "home", href: "/", icon: Home03Icon },
-  { key: "calendar", href: "/calendar", icon: Calendar03Icon },
-  { key: "meals", href: "/meals", icon: Restaurant01Icon },
-  { key: "announcements", href: "/announcements", icon: Megaphone01Icon },
-  { key: "events", href: "/events", icon: Calendar01Icon },
+  { key: "dashboard", href: "/admin", icon: Home03Icon, exact: true },
+  { key: "rag", href: "/admin/rag", icon: Database01Icon },
+  { key: "analytics", href: "/admin/analytics", icon: ChartHistogramIcon },
+  { key: "feedback", href: "/admin/feedback", icon: MessageMultiple01Icon },
+  { key: "users", href: "/admin/users", icon: UserGroupIcon },
+  { key: "cron", href: "/admin/cron", icon: Clock01Icon },
+  { key: "logs", href: "/admin/logs", icon: FileEditIcon },
 ] as const;
 
-export function AppSidebar() {
-  const t = useTranslations("nav");
-  const tc = useTranslations("common");
+export function AdminSidebar() {
+  const t = useTranslations("admin.nav");
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -71,17 +70,15 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip={tc("appName")}>
-              <Link href="/">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
-                  AÜ
+            <SidebarMenuButton asChild size="lg" tooltip="AÜ Admin">
+              <Link href="/admin">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-destructive text-destructive-foreground text-sm font-bold">
+                  ADM
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate font-semibold">
-                    {tc("appName")}
-                  </span>
+                  <span className="truncate font-semibold">AÜ Admin</span>
                   <span className="truncate text-xs text-sidebar-foreground/70">
-                    {tc("appDescription")}
+                    Yönetim Paneli
                   </span>
                 </div>
               </Link>
@@ -99,8 +96,8 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={
-                      item.href === "/"
-                        ? pathname === "/"
+                      "exact" in item && item.exact
+                        ? pathname === "/admin"
                         : pathname.startsWith(item.href)
                     }
                     tooltip={t(item.key)}
@@ -117,22 +114,19 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarSeparator />
+
         <SidebarGroup>
-          {user && (
-            <SidebarGroupLabel>{t("chatHistory")}</SidebarGroupLabel>
-          )}
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={t("newChat")}>
-                  <Link href="/chat">
-                    <HugeiconsIcon icon={Add01Icon} />
-                    <span>{t("newChat")}</span>
+                <SidebarMenuButton asChild tooltip={t("backToApp")}>
+                  <Link href="/">
+                    <HugeiconsIcon icon={ArrowLeft01Icon} />
+                    <span>{t("backToApp")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
-            {user && <ChatHistoryList />}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -140,16 +134,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            {isLoading ? null : user ? (
-              <UserDropdown />
-            ) : (
-              <SidebarMenuButton asChild tooltip={t("login")} className="justify-center">
-                <Link href="/login">
-                  <HugeiconsIcon icon={Login01Icon} />
-                  <span>{t("login")}</span>
-                </Link>
-              </SidebarMenuButton>
-            )}
+            {!isLoading && user && <AdminUserDropdown />}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
@@ -157,22 +142,19 @@ export function AppSidebar() {
   );
 }
 
-function UserDropdown() {
+function AdminUserDropdown() {
   const user = useAuthStore((s) => s.user);
-  const role = useAuthStore((s) => s.role);
-  const t = useTranslations("nav");
   const te = useTranslations("errors");
 
   async function handleLogout() {
     const { error } = await signOut();
     if (error) {
       logger.error("Logout failed", error.message);
-      toast.error(te.has(error.code) ? te(error.code) : t("logoutFailed"));
+      toast.error(te.has(error.code) ? te(error.code) : "Çıkış yapılamadı");
     }
   }
 
-  const displayName =
-    user?.user_metadata?.full_name || user?.email || "";
+  const displayName = user?.user_metadata?.full_name || user?.email || "";
   const initial = (displayName || "?").charAt(0).toUpperCase();
 
   return (
@@ -198,24 +180,16 @@ function UserDropdown() {
         align="start"
         side="top"
       >
-        {role === "admin" && (
-          <DropdownMenuItem asChild>
-            <Link href="/admin">
-              <HugeiconsIcon icon={Settings01Icon} />
-              Admin Paneli
-            </Link>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem asChild>
           <Link href="/settings">
             <HugeiconsIcon icon={Settings02Icon} />
-            {t("settings")}
+            Ayarlar
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <HugeiconsIcon icon={Logout01Icon} />
-          {t("logout")}
+          Çıkış Yap
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

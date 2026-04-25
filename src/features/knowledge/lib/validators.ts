@@ -30,3 +30,9 @@ export const searchKnowledgeInputSchema = z.object({
 export const reingestSchema = z.object({
   id: z.string().uuid(),
 });
+
+export const updateWatchSettingsSchema = z.object({
+  isWatched: z.boolean(),
+  checkFrequency: z.enum(["daily", "weekly", "monthly"]).nullable().optional(),
+  autoIngest: z.boolean().optional(),
+});
