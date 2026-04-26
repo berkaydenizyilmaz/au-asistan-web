@@ -5,6 +5,7 @@ import * as cheerio from "cheerio";
 import { z } from "zod";
 
 import { getChatModel } from "@/lib/ai/provider";
+import { logger } from "@/lib/logger";
 
 import type { CrawlDiscovery, MetadataSuggestion } from "../types";
 
@@ -62,16 +63,22 @@ export async function crawlSite(
   const visited = new Set<string>();
   const discoveries: CrawlDiscovery[] = [];
 
+  logger.info(`[crawl] starting — root=${rootUrl} maxDepth=${maxDepth} maxPages=${maxPages}`);
+
   const sitemapUrls = await trySitemap(rootUrl);
   if (sitemapUrls.length > 0) {
+    logger.info(`[crawl] sitemap found — ${sitemapUrls.length} URLs`);
     for (const url of sitemapUrls.slice(0, maxPages)) {
       if (shouldSkip(url, rootDomain)) continue;
       discoveries.push({ url, depth: 0 });
     }
+    logger.info(`[crawl] sitemap done — ${discoveries.length} indexable URLs`);
     return discoveries;
   }
 
+  logger.info(`[crawl] no sitemap — starting recursive crawl`);
   await crawlPage(rootUrl, 0);
+  logger.info(`[crawl] done — ${discoveries.length} pages discovered`);
 
   return discoveries;
 
@@ -82,6 +89,7 @@ export async function crawlSite(
     if (shouldSkip(url, rootDomain)) return;
 
     visited.add(url);
+    logger.debug(`[crawl] visiting [${depth}] ${url}`);
 
     let html: string;
     try {
@@ -89,9 +97,13 @@ export async function crawlSite(
         headers: CRAWL_HEADERS,
         cache: "no-store",
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        logger.debug(`[crawl] skip ${url} — HTTP ${response.status}`);
+        return;
+      }
       html = await response.text();
-    } catch {
+    } catch (err) {
+      logger.debug(`[crawl] skip ${url} — fetch error`, err);
       return;
     }
 
@@ -108,7 +120,7 @@ export async function crawlSite(
 
       try {
         const resolved = new URL(href, url);
-        resolved.hash = ""; // fragment'ı temizle — aynı sayfa farklı anchor = tek URL
+        resolved.hash = "";
         links.push(resolved.toString());
       } catch {
       }
@@ -174,6 +186,7 @@ export async function suggestMetadata(
   pageTitle: string,
   snippet: string
 ): Promise<MetadataSuggestion> {
+  logger.debug(`[metadata] suggesting for ${url}`);
   const { object } = await generateObject({
     model: getChatModel(),
     schema: metadataSchema,

@@ -12,6 +12,7 @@ import { updateWatchSettingsSchema } from "./validators";
 import { scrapeUrl } from "./scraper";
 import { chunkContent } from "./chunker";
 import { generateEmbeddings } from "./embedder";
+import { logger } from "@/lib/logger";
 import type { ChunkWithContext } from "../types";
 
 interface IngestParams {
@@ -22,10 +23,13 @@ interface IngestParams {
 
 export async function ingestDocument(params: IngestParams): Promise<string> {
   await requireAdmin();
+  logger.info(`[ingest] start — ${params.url}`);
 
+  logger.info(`[ingest] scraping...`);
   const scraped = await scrapeUrl(params.url);
-  const domain = new URL(params.url).hostname;
+  logger.info(`[ingest] scraped — ${scraped.text.length} chars, type=${scraped.sourceType}`);
 
+  const domain = new URL(params.url).hostname;
   const db = await createDrizzleSupabaseClient();
 
   const existing = await db.admin
@@ -38,8 +42,12 @@ export async function ingestDocument(params: IngestParams): Promise<string> {
     throw new ConflictError("Bu URL zaten bilgi tabanında mevcut");
   }
 
+  logger.info(`[ingest] chunking...`);
   const chunks = await chunkContent(scraped);
+  logger.info(`[ingest] ${chunks.length} chunks — embedding...`);
+
   const embeddings = await generateEmbeddings(chunks.map((c) => c.content));
+  logger.info(`[ingest] embeddings done — saving to DB...`);
 
   const [doc] = await db.admin
     .insert(documents)
@@ -56,6 +64,7 @@ export async function ingestDocument(params: IngestParams): Promise<string> {
     .returning({ id: documents.id });
 
   await insertChunks(db, doc.id, chunks, embeddings);
+  logger.info(`[ingest] done — id=${doc.id}`);
 
   return doc.id;
 }
