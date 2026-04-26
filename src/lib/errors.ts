@@ -61,3 +61,9 @@ export class ConflictError extends AppError {
     super({ message, code: "CONFLICT", statusCode: 409 });
   }
 }
+
+export class AccountDeletionError extends AppError {
+  constructor(message = "Account deletion failed", cause?: unknown) {
+    super({ message, code: "ACCOUNT_DELETE_FAILED", statusCode: 500, cause });
+  }
+}

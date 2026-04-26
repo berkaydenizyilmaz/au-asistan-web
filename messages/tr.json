@@ -12,7 +12,8 @@
     "EMAIL_NOT_CONFIRMED": "E-posta adresiniz henüz doğrulanmamış.",
     "SAME_PASSWORD": "Yeni şifre eski şifreden farklı olmalı.",
     "PASSWORD_TOO_SHORT": "Şifre en az 6 karakter olmalı.",
-    "RATE_LIMIT": "Çok fazla deneme yaptınız. Lütfen biraz bekleyin."
+    "RATE_LIMIT": "Çok fazla deneme yaptınız. Lütfen biraz bekleyin.",
+    "ACCOUNT_DELETE_FAILED": "Hesap silinemedi. Lütfen tekrar deneyin."
   },
   "common": {
     "appName": "AÜ Asistan",
@@ -273,5 +274,20 @@
     "lightMode": "Açık Mod",
     "notifications": "Bildirimler",
     "toggleSidebar": "Kenar Çubuğunu Aç/Kapat"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "account": {
+      "title": "Hesap",
+      "email": "E-posta",
+      "name": "İsim",
+      "deleteTitle": "Hesabı Sil",
+      "deleteDescription": "Hesabınız ve tüm verileriniz (sohbet geçmişi, puanlamalar, bildirim ayarları) kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+      "deleteButton": "Hesabımı Sil",
+      "deleteConfirm": "Evet, hesabımı sil",
+      "deleteCancel": "İptal",
+      "deleteSuccess": "Hesabınız başarıyla silindi.",
+      "deleting": "Siliniyor..."
+    }
   }
 }

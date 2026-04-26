@@ -12,7 +12,8 @@
     "EMAIL_NOT_CONFIRMED": "Your email has not been confirmed yet.",
     "SAME_PASSWORD": "New password must be different from the old one.",
     "PASSWORD_TOO_SHORT": "Password must be at least 6 characters.",
-    "RATE_LIMIT": "Too many attempts. Please wait a moment."
+    "RATE_LIMIT": "Too many attempts. Please wait a moment.",
+    "ACCOUNT_DELETE_FAILED": "Account could not be deleted. Please try again."
   },
   "common": {
     "appName": "AU Assistant",
@@ -273,5 +274,20 @@
     "lightMode": "Light Mode",
     "notifications": "Notifications",
     "toggleSidebar": "Toggle Sidebar"
+  },
+  "settings": {
+    "title": "Settings",
+    "account": {
+      "title": "Account",
+      "email": "Email",
+      "name": "Name",
+      "deleteTitle": "Delete Account",
+      "deleteDescription": "Your account and all your data (chat history, ratings, notification settings) will be permanently deleted. This action cannot be undone.",
+      "deleteButton": "Delete My Account",
+      "deleteConfirm": "Yes, delete my account",
+      "deleteCancel": "Cancel",
+      "deleteSuccess": "Your account has been successfully deleted.",
+      "deleting": "Deleting..."
+    }
   }
 }
