@@ -39,7 +39,7 @@ export function RagManagementClient({ initialDocuments }: RagManagementClientPro
   async function checkWatched() {
     setCheckingWatched(true);
     try {
-      await apiFetch("/api/admin/cron/knowledge", { method: "POST" });
+      await apiFetch("/api/admin/knowledge/check-watched", { method: "POST" });
       toast.success(t("checkWatchedSuccess"));
       await refresh();
     } catch {
