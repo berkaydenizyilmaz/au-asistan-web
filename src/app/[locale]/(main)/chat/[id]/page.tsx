@@ -24,6 +24,7 @@ export default async function ChatDetailPage({ params }: ChatDetailPageProps) {
   return (
     <div className="-m-4 h-[calc(100dvh-(--spacing(14)))] md:-m-6">
       <ChatContainer
+        key={conversation.id}
         chatId={conversation.id}
         initialMessages={toUIMessages(conversation.messages)}
         initialFeedback={initialFeedback}

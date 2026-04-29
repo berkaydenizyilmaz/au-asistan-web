@@ -20,7 +20,7 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
 
   return (
     <div className="-m-4 h-[calc(100dvh-(--spacing(14)))] md:-m-6">
-      <ChatContainer autoSend={q} />
+      <ChatContainer key="new" autoSend={q} />
     </div>
   );
 }
