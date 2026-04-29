@@ -2,7 +2,6 @@ import "server-only";
 
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
-import { authUsers } from "drizzle-orm/supabase";
 
 import { requireAdmin } from "@/lib/auth/server";
 import { createDrizzleSupabaseClient } from "@/lib/db";
@@ -66,10 +65,9 @@ export async function listUsersForAdmin(pagination: {
         name: users.name,
         role: users.role,
         createdAt: users.createdAt,
-        email: authUsers.email,
+        email: sql<string | null>`(SELECT email FROM auth.users au WHERE au.id = "users".id)`,
       })
       .from(users)
-      .innerJoin(authUsers, eq(users.id, authUsers.id))
       .orderBy(desc(users.createdAt))
       .limit(pageSize)
       .offset(offset),
