@@ -16,8 +16,6 @@ import {
   ChevronsUpDown,
 } from "@hugeicons/core-free-icons";
 
-import { toast } from "sonner";
-
 import { useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
