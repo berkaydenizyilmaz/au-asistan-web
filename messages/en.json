@@ -191,6 +191,8 @@
     "title": "Admin Panel",
     "welcomeTitle": "Welcome to Admin Panel",
     "welcomeDescription": "Select a section from the left menu to manage the application.",
+    "quickStatsTitle": "Last 7 Days",
+    "sectionsTitle": "Sections",
     "nav": {
       "dashboard": "Dashboard",
       "rag": "Knowledge Base",

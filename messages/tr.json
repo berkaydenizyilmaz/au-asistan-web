@@ -191,6 +191,8 @@
     "title": "Yönetim Paneli",
     "welcomeTitle": "Yönetim Paneline Hoş Geldiniz",
     "welcomeDescription": "Sol menüden bir bölüm seçerek yönetim işlemlerinizi gerçekleştirin.",
+    "quickStatsTitle": "Son 7 Gün",
+    "sectionsTitle": "Bölümler",
     "nav": {
       "dashboard": "Panel",
       "rag": "Bilgi Tabanı",
