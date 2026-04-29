@@ -10,7 +10,6 @@ import {
   MessageMultiple01Icon,
   UserGroupIcon,
   Clock01Icon,
-  FileEditIcon,
   ArrowLeft01Icon,
   Logout01Icon,
   Settings02Icon,
@@ -51,7 +50,6 @@ const NAV_ITEMS = [
   { key: "feedback", href: "/admin/feedback", icon: MessageMultiple01Icon },
   { key: "users", href: "/admin/users", icon: UserGroupIcon },
   { key: "cron", href: "/admin/cron", icon: Clock01Icon },
-  { key: "logs", href: "/admin/logs", icon: FileEditIcon },
 ] as const;
 
 export function AdminSidebar() {
