@@ -18,10 +18,9 @@ import {
 
 import { toast } from "sonner";
 
+import { useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { signOut } from "@/features/auth/lib/auth-actions";
-import { logger } from "@/lib/logger";
 import {
   Sidebar,
   SidebarContent,
@@ -142,14 +141,10 @@ export function AdminSidebar() {
 
 function AdminUserDropdown() {
   const user = useAuthStore((s) => s.user);
-  const te = useTranslations("errors");
+  const locale = useLocale();
 
-  async function handleLogout() {
-    const { error } = await signOut();
-    if (error) {
-      logger.error("Logout failed", error.message);
-      toast.error(te.has(error.code) ? te(error.code) : "Çıkış yapılamadı");
-    }
+  function handleLogout() {
+    window.location.href = `/api/auth/signout?locale=${locale}`;
   }
 
   const displayName = user?.user_metadata?.full_name || user?.email || "";

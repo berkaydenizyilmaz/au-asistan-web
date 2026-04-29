@@ -19,11 +19,10 @@ import {
 
 import { toast } from "sonner";
 
+import { useLocale } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/auth-store";
-import { signOut } from "@/features/auth/lib/auth-actions";
 import { ChatHistoryList } from "@/features/chat/components/chat-history-list";
-import { logger } from "@/lib/logger";
 import {
   Sidebar,
   SidebarContent,
@@ -161,14 +160,10 @@ function UserDropdown() {
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
   const t = useTranslations("nav");
-  const te = useTranslations("errors");
+  const locale = useLocale();
 
-  async function handleLogout() {
-    const { error } = await signOut();
-    if (error) {
-      logger.error("Logout failed", error.message);
-      toast.error(te.has(error.code) ? te(error.code) : t("logoutFailed"));
-    }
+  function handleLogout() {
+    window.location.href = `/api/auth/signout?locale=${locale}`;
   }
 
   const displayName =
