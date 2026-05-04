@@ -60,8 +60,10 @@ export async function replaceCalendarEvents(
     await tx
       .delete(academicCalendar)
       .where(
-        eq(academicCalendar.academicYear, academicYear) &&
+        and(
+          eq(academicCalendar.academicYear, academicYear),
           notInArray(academicCalendar.id, upsertedIds),
+        ),
       );
 
     const added: SelectAcademicCalendar[] = [];
