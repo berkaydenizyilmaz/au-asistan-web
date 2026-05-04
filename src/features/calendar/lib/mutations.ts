@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, notInArray, sql } from "drizzle-orm";
+import { and, eq, notInArray, sql } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { academicCalendar } from "@/lib/db/schema/content";
