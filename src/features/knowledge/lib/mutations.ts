@@ -13,13 +13,14 @@ import { scrapeUrl } from "./scraper";
 import { chunkContent } from "./chunker";
 import { generateEmbeddings } from "./embedder";
 import { logger } from "@/lib/logger";
-import type { ChunkWithContext } from "../types";
 
 interface IngestParams {
   url: string;
   title?: string | null;
   unit?: string | null;
 }
+
+const BATCH_SIZE = 50;
 
 export async function ingestDocument(params: IngestParams): Promise<string> {
   await requireAdmin();
@@ -49,24 +50,39 @@ export async function ingestDocument(params: IngestParams): Promise<string> {
   const embeddings = await generateEmbeddings(chunks.map((c) => c.content));
   logger.info(`[ingest] embeddings done — saving to DB...`);
 
-  const [doc] = await db.admin
-    .insert(documents)
-    .values({
-      title: params.title || scraped.title,
-      sourceUrl: params.url,
-      sourceType: scraped.sourceType,
-      domain,
-      unit: params.unit ?? null,
-      contentHash: scraped.contentHash,
-      lastScrapedAt: new Date(),
-      metadata: {},
-    })
-    .returning({ id: documents.id });
+  const docId = await db.admin.transaction(async (tx) => {
+    const [doc] = await tx
+      .insert(documents)
+      .values({
+        title: params.title || scraped.title,
+        sourceUrl: params.url,
+        sourceType: scraped.sourceType,
+        domain,
+        unit: params.unit ?? null,
+        contentHash: scraped.contentHash,
+        lastScrapedAt: new Date(),
+        metadata: {},
+      })
+      .returning({ id: documents.id });
 
-  await insertChunks(db, doc.id, chunks, embeddings);
-  logger.info(`[ingest] done — id=${doc.id}`);
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batch = chunks.slice(i, i + BATCH_SIZE);
+      const batchEmbeddings = embeddings.slice(i, i + BATCH_SIZE);
+      await tx.insert(documentChunks).values(
+        batch.map((chunk, j) => ({
+          documentId: doc.id,
+          content: chunk.content,
+          embedding: batchEmbeddings[j],
+          metadata: chunk.metadata,
+        })),
+      );
+    }
 
-  return doc.id;
+    return doc.id;
+  });
+
+  logger.info(`[ingest] done — id=${docId}`);
+  return docId;
 }
 
 export async function reingestDocument(id: string): Promise<void> {
@@ -75,34 +91,39 @@ export async function reingestDocument(id: string): Promise<void> {
 
   const db = await createDrizzleSupabaseClient();
 
-  const result = await db.admin
+  const [doc] = await db.admin
     .select()
     .from(documents)
     .where(eq(documents.id, id))
     .limit(1);
 
-  if (!result[0]) throw new NotFoundError("Döküman bulunamadı");
+  if (!doc) throw new NotFoundError("Döküman bulunamadı");
 
-  const doc = result[0];
   const scraped = await scrapeUrl(doc.sourceUrl);
-
   const chunks = await chunkContent(scraped);
   const embeddings = await generateEmbeddings(chunks.map((c) => c.content));
 
-  await db.admin
-    .delete(documentChunks)
-    .where(eq(documentChunks.documentId, id));
+  await db.admin.transaction(async (tx) => {
+    await tx.delete(documentChunks).where(eq(documentChunks.documentId, id));
 
-  await insertChunks(db, id, chunks, embeddings);
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batch = chunks.slice(i, i + BATCH_SIZE);
+      const batchEmbeddings = embeddings.slice(i, i + BATCH_SIZE);
+      await tx.insert(documentChunks).values(
+        batch.map((chunk, j) => ({
+          documentId: id,
+          content: chunk.content,
+          embedding: batchEmbeddings[j],
+          metadata: chunk.metadata,
+        })),
+      );
+    }
 
-  await db.admin
-    .update(documents)
-    .set({
-      contentHash: scraped.contentHash,
-      lastScrapedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(documents.id, id));
+    await tx
+      .update(documents)
+      .set({ contentHash: scraped.contentHash, lastScrapedAt: new Date(), updatedAt: new Date() })
+      .where(eq(documents.id, id));
+  });
 }
 
 export async function deleteDocument(id: string): Promise<void> {
@@ -181,25 +202,34 @@ export async function checkWatchedDocuments(): Promise<{
       if (scraped.contentHash !== doc.contentHash) {
         if (doc.autoIngest) {
           const chunks = await chunkContent(scraped);
-          const embeddings = await generateEmbeddings(
-            chunks.map((c) => c.content)
-          );
+          const embeddings = await generateEmbeddings(chunks.map((c) => c.content));
 
-          await db.admin
-            .delete(documentChunks)
-            .where(eq(documentChunks.documentId, doc.id));
+          await db.admin.transaction(async (tx) => {
+            await tx.delete(documentChunks).where(eq(documentChunks.documentId, doc.id));
 
-          await insertChunks(db, doc.id, chunks, embeddings);
+            for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+              const batch = chunks.slice(i, i + BATCH_SIZE);
+              const batchEmbeddings = embeddings.slice(i, i + BATCH_SIZE);
+              await tx.insert(documentChunks).values(
+                batch.map((chunk, j) => ({
+                  documentId: doc.id,
+                  content: chunk.content,
+                  embedding: batchEmbeddings[j],
+                  metadata: chunk.metadata,
+                })),
+              );
+            }
 
-          await db.admin
-            .update(documents)
-            .set({
-              contentHash: scraped.contentHash,
-              lastScrapedAt: new Date(),
-              lastCheckedAt: new Date(),
-              updatedAt: new Date(),
-            })
-            .where(eq(documents.id, doc.id));
+            await tx
+              .update(documents)
+              .set({
+                contentHash: scraped.contentHash,
+                lastScrapedAt: new Date(),
+                lastCheckedAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(documents.id, doc.id));
+          });
 
           reingested++;
         } else {
@@ -214,33 +244,10 @@ export async function checkWatchedDocuments(): Promise<{
           .set({ lastCheckedAt: new Date() })
           .where(eq(documents.id, doc.id));
       }
-    } catch {
+    } catch (error) {
+      logger.warn(`[checkWatched] failed for ${doc.sourceUrl}`, error);
     }
   }
 
   return { checked, reingested };
-}
-
-async function insertChunks(
-  db: Awaited<ReturnType<typeof createDrizzleSupabaseClient>>,
-  documentId: string,
-  chunks: ChunkWithContext[],
-  embeddings: number[][]
-): Promise<void> {
-  if (chunks.length === 0) return;
-
-  const BATCH_SIZE = 50;
-  for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
-    const batch = chunks.slice(i, i + BATCH_SIZE);
-    const batchEmbeddings = embeddings.slice(i, i + BATCH_SIZE);
-
-    await db.admin.insert(documentChunks).values(
-      batch.map((chunk, j) => ({
-        documentId,
-        content: chunk.content,
-        embedding: batchEmbeddings[j],
-        metadata: chunk.metadata,
-      }))
-    );
-  }
 }

@@ -44,6 +44,7 @@ export interface CrawlDiscovery {
   url: string;
   depth: number;
   title?: string;
+  snippet?: string;
 }
 
 export interface MetadataSuggestion {

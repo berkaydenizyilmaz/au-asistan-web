@@ -109,8 +109,9 @@ export async function crawlSite(
 
     const $ = cheerio.load(html);
     const title = $("h1").first().text().trim() || $("title").text().trim();
+    const snippet = $("body").text().replace(/\s+/g, " ").trim().slice(0, 500);
 
-    discoveries.push({ url, depth, title: title || undefined });
+    discoveries.push({ url, depth, title: title || undefined, snippet: snippet || undefined });
 
     const links: string[] = [];
     $("a[href]").each((_, el) => {
