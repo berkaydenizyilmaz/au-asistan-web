@@ -4,8 +4,59 @@ import type { UIMessage } from "ai";
 import { useTranslations } from "next-intl";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ThumbsDownIcon, ThumbsUpIcon } from "@hugeicons/core-free-icons";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
 
 import { cn } from "@/lib/utils";
+
+const markdownComponents: Components = {
+  p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+  h1: ({ children }) => <h1 className="text-base font-bold mt-3 mb-1.5 first:mt-0">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-sm font-bold mt-3 mb-1 first:mt-0">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1 first:mt-0">{children}</h3>,
+  ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-0.5 last:mb-0">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-0.5 last:mb-0">{children}</ol>,
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-2 border-muted-foreground/30 pl-3 my-2 text-muted-foreground italic">
+      {children}
+    </blockquote>
+  ),
+  code: ({ children, className }) => {
+    const isBlock = className?.includes("language-");
+    if (isBlock) {
+      return (
+        <pre className="my-2 rounded-md bg-muted/80 px-3 py-2 overflow-x-auto text-xs font-mono">
+          <code>{children}</code>
+        </pre>
+      );
+    }
+    return (
+      <code className="rounded bg-muted/80 px-1 py-0.5 text-xs font-mono">{children}</code>
+    );
+  },
+  pre: ({ children }) => <>{children}</>,
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:opacity-80">
+      {children}
+    </a>
+  ),
+  table: ({ children }) => (
+    <div className="my-2 overflow-x-auto">
+      <table className="w-full text-xs border-collapse">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => (
+    <th className="border border-muted-foreground/20 bg-muted/50 px-2 py-1 text-left font-semibold">{children}</th>
+  ),
+  td: ({ children }) => (
+    <td className="border border-muted-foreground/20 px-2 py-1">{children}</td>
+  ),
+  hr: () => <hr className="my-3 border-muted-foreground/20" />,
+};
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -33,16 +84,21 @@ export function ChatMessage({
       <div className={cn("flex flex-col gap-1", isUser && "items-end")}>
         <div
           className={cn(
-            "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
+            "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
             isUser
-              ? "bg-primary text-primary-foreground rounded-br-md"
+              ? "bg-primary text-primary-foreground rounded-br-md leading-relaxed whitespace-pre-wrap"
               : "bg-muted rounded-bl-md",
           )}
         >
           {message.parts.map((part, i) => {
             switch (part.type) {
               case "text":
-                return <span key={i}>{part.text}</span>;
+                if (isUser) return <span key={i}>{part.text}</span>;
+                return (
+                  <ReactMarkdown key={i} remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                    {part.text}
+                  </ReactMarkdown>
+                );
               default:
                 if (part.type.startsWith("tool-")) {
                   const toolPart = part as { type: string; state: string };

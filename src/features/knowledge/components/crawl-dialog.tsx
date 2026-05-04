@@ -49,10 +49,10 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [limitReached, setLimitReached] = useState(false);
   const [totalEligible, setTotalEligible] = useState(0);
-  const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null);
+  const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{
-    success: number;
-    failed: { url: string; reason: string }[];
+    saved: number;
+    updated: number;
   } | null>(null);
 
   function updateDiscovered(url: string, patch: Partial<DiscoveredUrl>) {
@@ -100,33 +100,28 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
     const urls = Array.from(selected);
     if (urls.length === 0) return;
 
-    setImportProgress({ current: 0, total: urls.length });
-    let success = 0;
-    const failed: { url: string; reason: string }[] = [];
+    setImporting(true);
+    try {
+      const payload = urls.map((url) => {
+        const meta = discovered.find((d) => d.url === url)!;
+        return { url, title: meta.title, unit: meta.unit };
+      });
 
-    for (let i = 0; i < urls.length; i++) {
-      const url = urls[i];
-      const meta = discovered.find((d) => d.url === url);
-      setImportProgress({ current: i + 1, total: urls.length });
-
-      try {
-        await apiFetch("/api/admin/knowledge/ingest", {
+      const result = await apiFetch<{ saved: number; updated: number }>(
+        "/api/admin/knowledge/documents/bulk",
+        {
           method: "POST",
-          body: JSON.stringify({ url, title: meta?.title, unit: meta?.unit }),
-        });
-        success++;
-      } catch (err: unknown) {
-        const code = (err as { code?: string })?.code;
-        failed.push({
-          url,
-          reason: code === "CONFLICT" ? "Zaten mevcut" : "Eklenemedi",
-        });
-      }
-    }
+          body: JSON.stringify({ documents: payload }),
+        },
+      );
 
-    setImportProgress(null);
-    setImportResult({ success, failed });
-    onImported();
+      setImportResult(result);
+      onImported();
+    } catch {
+      toast.error("Kayıt başarısız oldu.");
+    } finally {
+      setImporting(false);
+    }
   }
 
   function toggleAll(checked: boolean) {
@@ -153,8 +148,6 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
     setOpen(false);
   }
 
-  const isImporting = importProgress !== null;
-
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
       <DialogTrigger asChild>
@@ -168,25 +161,20 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
 
         {importResult !== null ? (
           <div className="flex flex-col flex-1 min-h-0 gap-4">
-            <div className="space-y-3">
-              <p className="text-sm">
-                <span className="font-medium text-green-600">{importResult.success} URL</span> başarıyla eklendi.
-              </p>
-              {importResult.failed.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm">
-                    <span className="font-medium text-destructive">{importResult.failed.length} URL</span> eklenemedi:
-                  </p>
-                  <div className="overflow-y-auto max-h-52 border rounded-md divide-y">
-                    {importResult.failed.map((f) => (
-                      <div key={f.url} className="px-3 py-2">
-                        <p className="text-xs text-muted-foreground truncate">{f.url}</p>
-                        <p className="text-xs text-destructive">{f.reason}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            <div className="space-y-2">
+              {importResult.saved > 0 && (
+                <p className="text-sm">
+                  <span className="font-medium text-green-600">{importResult.saved} URL</span> bilgi tabanına eklendi.
+                </p>
               )}
+              {importResult.updated > 0 && (
+                <p className="text-sm">
+                  <span className="font-medium text-muted-foreground">{importResult.updated} URL</span> zaten mevcuttu, başlık/birim güncellendi.
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground pt-1">
+                İçerik ekleme (chunking) için listeden her kaydın yanındaki &quot;Yeniden İşle&quot; butonunu kullanabilirsin.
+              </p>
             </div>
             <DialogFooter>
               <Button onClick={handleClose}>Kapat</Button>
@@ -247,7 +235,7 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
                 </span>
                 {limitReached && (
                   <p className="text-xs text-amber-600">
-                    Sitemap'ta {totalEligible} uygun sayfa var; yalnızca {discovered.length} tanesi keşfedildi. Daha fazlası için sayfa limitini artırın.
+                    Sitemap&apos;ta {totalEligible} uygun sayfa var; yalnızca {discovered.length} tanesi keşfedildi. Daha fazlası için sayfa limitini artırın.
                   </p>
                 )}
               </div>
@@ -295,13 +283,12 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
                 type="button"
                 variant="outline"
                 onClick={() => { setDiscovered([]); setSelected(new Set()); setLimitReached(false); }}
+                disabled={importing}
               >
                 Geri
               </Button>
-              <Button onClick={handleImport} disabled={selected.size === 0 || isImporting}>
-                {isImporting
-                  ? t("crawlImporting", { current: importProgress!.current, total: importProgress!.total })
-                  : t("crawlImport")}
+              <Button onClick={handleImport} disabled={selected.size === 0 || importing}>
+                {importing ? "Kaydediliyor..." : `${selected.size} URL Kaydet`}
               </Button>
             </DialogFooter>
           </div>

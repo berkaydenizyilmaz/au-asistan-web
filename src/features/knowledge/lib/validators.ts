@@ -15,6 +15,19 @@ export const ingestUrlSchema = z.object({
   title: z.string().optional(),
 });
 
+export const bulkCreateDocumentsSchema = z.object({
+  documents: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        title: z.string().min(1),
+        unit: z.string().optional(),
+      }),
+    )
+    .min(1)
+    .max(500),
+});
+
 export const crawlInputSchema = z.object({
   rootUrl: z.string().url(),
   maxDepth: z.number().int().min(1).max(5).default(3),

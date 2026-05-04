@@ -1,18 +1,60 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { documents, documentChunks } from "@/lib/db/schema/documents";
 import { requireAdmin } from "@/lib/auth/server";
 import { uuidString, parseOrThrow } from "@/lib/validation";
 import { NotFoundError, ConflictError } from "@/lib/errors";
-import { updateWatchSettingsSchema } from "./validators";
+import { updateWatchSettingsSchema, bulkCreateDocumentsSchema } from "./validators";
 
 import { scrapeUrl } from "./scraper";
 import { chunkContent } from "./chunker";
 import { generateEmbeddings } from "./embedder";
 import { logger } from "@/lib/logger";
+
+export async function bulkCreateDocumentStubs(
+  params: unknown,
+): Promise<{ saved: number; updated: number }> {
+  await requireAdmin();
+  const { documents: stubs } = parseOrThrow(bulkCreateDocumentsSchema, params, "Invalid bulk create input");
+
+  const db = await createDrizzleSupabaseClient();
+
+  const values = stubs.map((stub) => {
+    const parsed = new URL(stub.url);
+    const sourceType = stub.url.toLowerCase().endsWith(".pdf") ? "pdf" : "html";
+    return {
+      title: stub.title,
+      sourceUrl: stub.url,
+      sourceType,
+      domain: parsed.hostname,
+      unit: stub.unit ?? null,
+      metadata: {},
+    };
+  });
+
+  // xmax = 0 means the row was newly inserted (not updated)
+  const rows = await db.admin
+    .insert(documents)
+    .values(values)
+    .onConflictDoUpdate({
+      target: documents.sourceUrl,
+      set: {
+        title: sql`excluded.title`,
+        unit: sql`excluded.unit`,
+        updatedAt: sql`now()`,
+      },
+    })
+    .returning({ id: documents.id, xmax: sql<string>`xmax` });
+
+  const saved = rows.filter((r) => r.xmax === "0").length;
+  const updated = rows.length - saved;
+
+  logger.info(`[bulkCreate] ${saved} inserted, ${updated} updated`);
+  return { saved, updated };
+}
 
 interface IngestParams {
   url: string;

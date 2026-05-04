@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import type { DocumentDTO } from "../types";
 import { WatchToggle } from "./watch-toggle";
@@ -20,6 +21,9 @@ import { DeleteDocumentButton } from "./delete-document-button";
 interface DocumentTableProps {
   documents: DocumentDTO[];
   onRefresh: () => void;
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+  onToggleAll: (checked: boolean) => void;
 }
 
 function formatDate(iso: string | null): string {
@@ -31,8 +35,10 @@ function formatDate(iso: string | null): string {
   });
 }
 
-export function DocumentTable({ documents, onRefresh }: DocumentTableProps) {
+export function DocumentTable({ documents, onRefresh, selected, onToggle, onToggleAll }: DocumentTableProps) {
   const t = useTranslations("admin.rag");
+  const allSelected = documents.length > 0 && selected.size === documents.length;
+  const someSelected = selected.size > 0 && !allSelected;
 
   if (documents.length === 0) {
     return (
@@ -47,6 +53,13 @@ export function DocumentTable({ documents, onRefresh }: DocumentTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-10">
+              <Checkbox
+                checked={allSelected || (someSelected ? "indeterminate" : false)}
+                onCheckedChange={(c) => onToggleAll(c === true)}
+                aria-label="Tümünü seç"
+              />
+            </TableHead>
             <TableHead className="min-w-[200px]">{t("tableTitle")}</TableHead>
             <TableHead>{t("tableDomain")}</TableHead>
             <TableHead>{t("tableUnit")}</TableHead>
@@ -58,7 +71,14 @@ export function DocumentTable({ documents, onRefresh }: DocumentTableProps) {
         </TableHeader>
         <TableBody>
           {documents.map((doc) => (
-            <TableRow key={doc.id}>
+            <TableRow key={doc.id} data-selected={selected.has(doc.id)} className="data-[selected=true]:bg-muted/50">
+              <TableCell>
+                <Checkbox
+                  checked={selected.has(doc.id)}
+                  onCheckedChange={() => onToggle(doc.id)}
+                  aria-label={doc.title}
+                />
+              </TableCell>
               <TableCell className="font-medium">
                 <div className="max-w-[280px]">
                   <p className="truncate text-sm">{doc.title}</p>
@@ -82,7 +102,13 @@ export function DocumentTable({ documents, onRefresh }: DocumentTableProps) {
                 </Badge>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {formatDate(doc.lastScrapedAt)}
+                {doc.lastScrapedAt ? (
+                  formatDate(doc.lastScrapedAt)
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    Bekliyor
+                  </span>
+                )}
               </TableCell>
               <TableCell>
                 <WatchToggle

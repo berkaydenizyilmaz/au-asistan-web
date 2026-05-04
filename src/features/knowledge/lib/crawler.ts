@@ -65,7 +65,12 @@ export async function crawlSite(
 ): Promise<CrawlSiteResult> {
   const { maxDepth = 3, maxPages = 100 } = options;
 
-  const rootDomain = new URL(rootUrl).hostname;
+  const rootParsed = new URL(rootUrl);
+  if (rootParsed.pathname !== "/" && rootParsed.pathname.endsWith("/")) {
+    rootParsed.pathname = rootParsed.pathname.slice(0, -1);
+    rootUrl = rootParsed.toString();
+  }
+  const rootDomain = rootParsed.hostname;
   const visited = new Set<string>();
   const discoveries: CrawlDiscovery[] = [];
 
@@ -88,10 +93,11 @@ export async function crawlSite(
 
   logger.info(`[crawl] no sitemap — starting recursive crawl`);
   await crawlPage(rootUrl, 0);
-  logger.info(`[crawl] done — ${discoveries.length} pages discovered`);
+  // visited.size hitting maxPages means there were likely more pages to explore.
+  const hitLimit = visited.size >= maxPages;
+  logger.info(`[crawl] done — ${discoveries.length} pages discovered${hitLimit ? " (limit reached)" : ""}`);
 
-  // For recursive crawl we can't know the true total without full traversal.
-  return { discoveries, totalEligible: discoveries.length };
+  return { discoveries, totalEligible: hitLimit ? maxPages + 1 : discoveries.length };
 
   async function crawlPage(url: string, depth: number) {
     if (depth > maxDepth) return;
@@ -133,6 +139,10 @@ export async function crawlSite(
       try {
         const resolved = new URL(href, url);
         resolved.hash = "";
+        // Normalize trailing slash so /foo and /foo/ aren't visited twice.
+        if (resolved.pathname !== "/" && resolved.pathname.endsWith("/")) {
+          resolved.pathname = resolved.pathname.slice(0, -1);
+        }
         links.push(resolved.toString());
       } catch {
       }
