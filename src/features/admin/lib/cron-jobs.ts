@@ -9,6 +9,11 @@ import { upsertEvents } from "@/features/events/lib/mutations";
 import { checkWatchedDocuments } from "@/features/knowledge/lib/mutations";
 import { scrapeMeals } from "@/features/meals/lib/meal-scraper";
 import { upsertMeals } from "@/features/meals/lib/mutations";
+import {
+  dispatchAnnouncementNotifications,
+  dispatchCalendarReminders,
+  dispatchEventNotifications,
+} from "@/features/notifications/lib/dispatcher";
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { cronRuns } from "@/lib/db/schema/cron";
 import { logger } from "@/lib/logger";
@@ -18,6 +23,7 @@ export const CRON_JOB_NAMES = [
   "announcements",
   "events",
   "calendar",
+  "calendar-reminders",
   "knowledge",
 ] as const;
 
@@ -35,27 +41,44 @@ export async function runCronJob(
     }
     case "announcements": {
       const { results, errors } = await scrapeAllAnnouncements();
-      if (results.length > 0) await upsertAnnouncements(results);
+      const inserted = results.length > 0 ? await upsertAnnouncements(results) : [];
+      const { created: notified } = inserted.length > 0
+        ? await dispatchAnnouncementNotifications(inserted)
+        : { created: 0 };
       logger.info(
-        `Cron announcements: scraped ${results.length}, errors ${errors.length}`
+        `Cron announcements: scraped ${results.length}, inserted ${inserted.length}, notified ${notified}, errors ${errors.length}`
       );
       if (errors.length > 0) logger.warn("Announcement scraping errors", { errors });
-      return { count: results.length, meta: { errors } };
+      return { count: inserted.length, meta: { scraped: results.length, notified, errors } };
     }
     case "events": {
       const parsed = await scrapeEvents();
-      if (parsed.length > 0) await upsertEvents(parsed);
-      logger.info(`Cron events: scraped ${parsed.length}`);
-      return { count: parsed.length };
+      const { inserted, updated } = parsed.length > 0
+        ? await upsertEvents(parsed)
+        : { inserted: [], updated: [] };
+      const { created: notified } = inserted.length > 0
+        ? await dispatchEventNotifications(inserted)
+        : { created: 0 };
+      logger.info(`Cron events: scraped ${parsed.length}, inserted ${inserted.length}, updated ${updated.length}, notified ${notified}`);
+      return { count: inserted.length, meta: { scraped: parsed.length, updated: updated.length, notified } };
     }
     case "calendar": {
       const parsed = await scrapeCalendar();
-      if (parsed.length > 0) await replaceCalendarEvents(parsed);
-      logger.info(`Cron calendar: scraped ${parsed.length}`);
+      const { added, changed } = parsed.length > 0
+        ? await replaceCalendarEvents(parsed)
+        : { added: [], changed: [] };
+      logger.info(`Cron calendar: scraped ${parsed.length}, added ${added.length}, changed ${changed.length}`);
       return {
-        count: parsed.length,
-        meta: parsed[0] ? { academicYear: parsed[0].academicYear } : {},
+        count: added.length,
+        meta: parsed[0]
+          ? { academicYear: parsed[0].academicYear, scraped: parsed.length, changed: changed.length }
+          : {},
       };
+    }
+    case "calendar-reminders": {
+      const { created } = await dispatchCalendarReminders(new Date());
+      logger.info(`Cron calendar-reminders: dispatched ${created} notifications`);
+      return { count: created };
     }
     case "knowledge": {
       const result = await checkWatchedDocuments();

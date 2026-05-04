@@ -1,14 +1,30 @@
 import {
   foreignKey,
+  index,
   jsonb,
   pgPolicy,
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm/sql";
 import { authenticatedRole, authUid, authUsers } from "drizzle-orm/supabase";
+
+export interface NotificationPreferences {
+  announcements: boolean;
+  events: boolean;
+  calendar: boolean;
+  calendarLeadDays: number[];
+}
+
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  announcements: true,
+  events: true,
+  calendar: true,
+  calendarLeadDays: [3, 0],
+};
 
 export const users = pgTable(
   "users",
@@ -17,8 +33,9 @@ export const users = pgTable(
     name: text().notNull(),
     role: text().notNull().default("user"),
     notificationPreferences: jsonb("notification_preferences")
+      .$type<NotificationPreferences>()
       .notNull()
-      .default({}),
+      .default(DEFAULT_NOTIFICATION_PREFERENCES),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -63,6 +80,7 @@ export const pushTokens = pgTable(
       foreignColumns: [users.id],
       name: "push_tokens_user_id_fk",
     }).onDelete("cascade"),
+    unique("push_tokens_token_unique").on(table.token),
     pgPolicy("users can manage own push tokens", {
       for: "all",
       to: authenticatedRole,
@@ -89,6 +107,12 @@ export const userSubscriptions = pgTable(
       foreignColumns: [users.id],
       name: "user_subscriptions_user_id_fk",
     }).onDelete("cascade"),
+    unique("user_subscriptions_user_type_category_unique").on(
+      table.userId,
+      table.type,
+      table.category
+    ),
+    index("user_subscriptions_type_category_idx").on(table.type, table.category),
     pgPolicy("users can manage own subscriptions", {
       for: "all",
       to: authenticatedRole,

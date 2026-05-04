@@ -1,7 +1,9 @@
-import { setRequestLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { requireUser } from "@/lib/auth/server";
 import { SettingsAccountSection } from "@/features/auth/components/settings-account-section";
+import { SettingsNotificationsSection } from "@/features/notifications/components/settings-notifications-section";
+import { SettingsSubscriptionsSection } from "@/features/notifications/components/settings-subscriptions-section";
+import { requireUser } from "@/lib/auth/server";
 
 interface SettingsPageProps {
   params: Promise<{ locale: string }>;
@@ -24,6 +26,8 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     <div className="max-w-lg space-y-6">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <SettingsAccountSection />
+      <SettingsNotificationsSection />
+      <SettingsSubscriptionsSection />
     </div>
   );
 }

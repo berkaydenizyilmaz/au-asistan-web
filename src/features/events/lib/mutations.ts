@@ -4,13 +4,16 @@ import { sql } from "drizzle-orm";
 
 import { createDrizzleSupabaseClient } from "@/lib/db";
 import { events } from "@/lib/db/schema/content";
+import type { SelectEvent } from "@/lib/db/schema/content";
 import { logger } from "@/lib/logger";
 import type { ParsedEvent } from "../types";
 
 const BATCH_SIZE = 500;
 
-export async function upsertEvents(parsed: ParsedEvent[]): Promise<void> {
-  if (parsed.length === 0) return;
+export async function upsertEvents(
+  parsed: ParsedEvent[],
+): Promise<{ inserted: SelectEvent[]; updated: SelectEvent[] }> {
+  if (parsed.length === 0) return { inserted: [], updated: [] };
 
   const seen = new Map<string, ParsedEvent>();
   for (const e of parsed) {
@@ -20,6 +23,8 @@ export async function upsertEvents(parsed: ParsedEvent[]): Promise<void> {
   const unique = Array.from(seen.values());
 
   const db = await createDrizzleSupabaseClient();
+  const inserted: SelectEvent[] = [];
+  const updated: SelectEvent[] = [];
 
   for (let i = 0; i < unique.length; i += BATCH_SIZE) {
     const batch = unique.slice(i, i + BATCH_SIZE);
@@ -32,7 +37,7 @@ export async function upsertEvents(parsed: ParsedEvent[]): Promise<void> {
       sourceUrl: e.sourceUrl,
     }));
 
-    await db.admin
+    const rows = await db.admin
       .insert(events)
       .values(values)
       .onConflictDoUpdate({
@@ -43,8 +48,33 @@ export async function upsertEvents(parsed: ParsedEvent[]): Promise<void> {
           location: sql`excluded.location`,
           sourceUrl: sql`excluded.source_url`,
         },
+      })
+      .returning({
+        id: events.id,
+        title: events.title,
+        description: events.description,
+        category: events.category,
+        organizer: events.organizer,
+        sourceUrl: events.sourceUrl,
+        eventDate: events.eventDate,
+        location: events.location,
+        createdAt: events.createdAt,
+        isNew: sql<boolean>`(xmax = 0)`,
       });
+
+    for (const row of rows) {
+      const { isNew, ...event } = row;
+      if (isNew) {
+        inserted.push(event);
+      } else {
+        updated.push(event);
+      }
+    }
   }
 
-  logger.info(`Upserted ${unique.length} events (${parsed.length - unique.length} duplicates skipped)`);
+  logger.info(
+    `Upserted ${unique.length} events: ${inserted.length} new, ${updated.length} updated`,
+  );
+
+  return { inserted, updated };
 }

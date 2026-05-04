@@ -1,13 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Notification02Icon } from "@hugeicons/core-free-icons";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { LocaleToggle } from "@/components/shared/locale-toggle";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function AppHeader() {
@@ -23,11 +21,7 @@ export function AppHeader() {
       <div className="flex items-center gap-1">
         <LocaleToggle />
         <ThemeToggle />
-        {user && (
-          <Button variant="ghost" size="icon" aria-label={t("notifications")}>
-            <HugeiconsIcon icon={Notification02Icon} className="size-4" />
-          </Button>
-        )}
+        {user && <NotificationBell />}
       </div>
     </header>
   );

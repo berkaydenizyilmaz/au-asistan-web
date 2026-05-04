@@ -1,6 +1,8 @@
 import {
   boolean,
   foreignKey,
+  index,
+  jsonb,
   pgPolicy,
   pgTable,
   text,
@@ -12,6 +14,10 @@ import { authenticatedRole, authUid } from "drizzle-orm/supabase";
 
 import { users } from "./users";
 
+export interface NotificationMetadata {
+  lead_days?: number;
+}
+
 export const notifications = pgTable(
   "notifications",
   {
@@ -22,6 +28,10 @@ export const notifications = pgTable(
     body: text().notNull(),
     referenceId: uuid("reference_id"),
     isRead: boolean("is_read").notNull().default(false),
+    metadata: jsonb()
+      .$type<NotificationMetadata>()
+      .notNull()
+      .default({}),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -32,6 +42,13 @@ export const notifications = pgTable(
       foreignColumns: [users.id],
       name: "notifications_user_id_fk",
     }).onDelete("cascade"),
+    index("notifications_user_id_created_at_idx").on(
+      table.userId,
+      table.createdAt
+    ),
+    index("notifications_user_id_is_read_idx")
+      .on(table.userId, table.isRead)
+      .where(sql`${table.isRead} = false`),
     pgPolicy("users can read own notifications", {
       for: "select",
       to: authenticatedRole,

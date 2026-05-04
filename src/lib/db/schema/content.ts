@@ -140,7 +140,12 @@ export const academicCalendar = pgTable(
       .notNull()
       .defaultNow(),
   },
-  () => [
+  (table) => [
+    unique("academic_calendar_year_title_start_unique").on(
+      table.academicYear,
+      table.title,
+      table.startDate,
+    ),
     pgPolicy("anyone can read academic calendar", {
       for: "select",
       to: [anonRole, authenticatedRole],

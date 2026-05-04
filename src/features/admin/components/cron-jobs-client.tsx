@@ -56,11 +56,20 @@ function JobCard({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [history, setHistory] = useState<CronRunDTO[] | null>(null);
 
-  const jobNameKey = `job${job.name.charAt(0).toUpperCase()}${job.name.slice(1)}` as
+  const JOB_KEY_MAP: Record<string, string> = {
+    meals: "jobMeals",
+    announcements: "jobAnnouncements",
+    events: "jobEvents",
+    calendar: "jobCalendar",
+    "calendar-reminders": "jobCalendarReminders",
+    knowledge: "jobKnowledge",
+  };
+  const jobNameKey = (JOB_KEY_MAP[job.name] ?? `job${job.name.charAt(0).toUpperCase()}${job.name.slice(1)}`) as
     | "jobMeals"
     | "jobAnnouncements"
     | "jobEvents"
     | "jobCalendar"
+    | "jobCalendarReminders"
     | "jobKnowledge";
 
   async function handleRun() {
