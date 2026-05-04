@@ -1,4 +1,6 @@
 import { parseJsonBody, successResponse, withErrorHandler } from "@/lib/api/server";
+
+export const maxDuration = 300;
 import { requireAdmin } from "@/lib/auth/server";
 import { crawlSite, suggestMetadata } from "@/features/knowledge/lib/crawler";
 import { crawlInputSchema } from "@/features/knowledge/lib/validators";
@@ -11,12 +13,12 @@ export const POST = withErrorHandler(async (request) => {
   const body = await parseJsonBody(request);
   const input = parseOrThrow(crawlInputSchema, body, "Invalid crawl input");
 
-  const discoveries = await crawlSite(input.rootUrl, {
+  const { discoveries, totalEligible } = await crawlSite(input.rootUrl, {
     maxDepth: input.maxDepth,
     maxPages: input.maxPages,
   });
 
-  logger.info(`[crawl/route] ${discoveries.length} pages found, starting sequential metadata suggestions`);
+  logger.info(`[crawl/route] ${discoveries.length} pages fetched (${totalEligible} eligible), starting sequential metadata suggestions`);
 
   const results = [];
   for (let i = 0; i < discoveries.length; i++) {
@@ -45,5 +47,11 @@ export const POST = withErrorHandler(async (request) => {
 
   logger.info(`[crawl/route] done — ${indexable.length} indexable, ${skipped.length} skipped`);
 
-  return successResponse({ indexable, skipped, total: results.length });
+  return successResponse({
+    indexable,
+    skipped,
+    total: results.length,
+    limitReached: totalEligible > input.maxPages,
+    totalEligible,
+  });
 });

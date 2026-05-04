@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { apiFetch } from "@/lib/api/client";
 
 interface DiscoveredUrl {
@@ -25,6 +24,14 @@ interface DiscoveredUrl {
   title: string;
   unit?: string;
   shouldIndex: boolean;
+}
+
+interface CrawlResponse {
+  indexable: DiscoveredUrl[];
+  skipped: DiscoveredUrl[];
+  total: number;
+  limitReached: boolean;
+  totalEligible: number;
 }
 
 interface CrawlDialogProps {
@@ -36,37 +43,51 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
   const [open, setOpen] = useState(false);
   const [rootUrl, setRootUrl] = useState("");
   const [maxDepth, setMaxDepth] = useState("3");
-  const [maxPages, setMaxPages] = useState("50");
+  const [maxPages, setMaxPages] = useState("100");
   const [discovering, setDiscovering] = useState(false);
   const [discovered, setDiscovered] = useState<DiscoveredUrl[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [limitReached, setLimitReached] = useState(false);
+  const [totalEligible, setTotalEligible] = useState(0);
   const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null);
+  const [importResult, setImportResult] = useState<{
+    success: number;
+    failed: { url: string; reason: string }[];
+  } | null>(null);
+
+  function updateDiscovered(url: string, patch: Partial<DiscoveredUrl>) {
+    setDiscovered((prev) =>
+      prev.map((d) => (d.url === url ? { ...d, ...patch } : d)),
+    );
+  }
 
   async function handleDiscover(e: React.FormEvent) {
     e.preventDefault();
     setDiscovering(true);
     setDiscovered([]);
     setSelected(new Set());
+    setLimitReached(false);
 
     try {
-      const result = await apiFetch<{ indexable: DiscoveredUrl[]; skipped: DiscoveredUrl[]; total: number }>(
-        "/api/admin/knowledge/crawl",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            rootUrl,
-            maxDepth: parseInt(maxDepth),
-            maxPages: parseInt(maxPages),
-          }),
-        }
-      );
+      const result = await apiFetch<CrawlResponse>("/api/admin/knowledge/crawl", {
+        method: "POST",
+        body: JSON.stringify({
+          rootUrl,
+          maxDepth: parseInt(maxDepth),
+          maxPages: parseInt(maxPages),
+        }),
+      });
+
       const indexable = result.indexable ?? [];
       if (indexable.length === 0) {
         toast.info(t("crawlNoUrls"));
         return;
       }
+
       setDiscovered(indexable);
       setSelected(new Set(indexable.map((d) => d.url)));
+      setLimitReached(result.limitReached ?? false);
+      setTotalEligible(result.totalEligible ?? indexable.length);
       toast.success(t("crawlDiscovered", { count: indexable.length }));
     } catch {
       toast.error("Keşif başarısız oldu.");
@@ -81,6 +102,7 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
 
     setImportProgress({ current: 0, total: urls.length });
     let success = 0;
+    const failed: { url: string; reason: string }[] = [];
 
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
@@ -90,24 +112,20 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
       try {
         await apiFetch("/api/admin/knowledge/ingest", {
           method: "POST",
-          body: JSON.stringify({
-            url,
-            title: meta?.title,
-            unit: meta?.unit,
-          }),
+          body: JSON.stringify({ url, title: meta?.title, unit: meta?.unit }),
         });
         success++;
-      } catch {
-        // skip failed URLs, continue
+      } catch (err: unknown) {
+        const code = (err as { code?: string })?.code;
+        failed.push({
+          url,
+          reason: code === "CONFLICT" ? "Zaten mevcut" : "Eklenemedi",
+        });
       }
     }
 
     setImportProgress(null);
-    toast.success(t("crawlImportDone", { count: success }));
-    setOpen(false);
-    setRootUrl("");
-    setDiscovered([]);
-    setSelected(new Set());
+    setImportResult({ success, failed });
     onImported();
   }
 
@@ -126,10 +144,19 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
     setSelected(next);
   }
 
+  function handleClose() {
+    setImportResult(null);
+    setRootUrl("");
+    setDiscovered([]);
+    setSelected(new Set());
+    setLimitReached(false);
+    setOpen(false);
+  }
+
   const isImporting = importProgress !== null;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">{t("crawl")}</Button>
       </DialogTrigger>
@@ -139,7 +166,33 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
           <DialogDescription>{t("crawlDialogDescription")}</DialogDescription>
         </DialogHeader>
 
-        {discovered.length === 0 ? (
+        {importResult !== null ? (
+          <div className="flex flex-col flex-1 min-h-0 gap-4">
+            <div className="space-y-3">
+              <p className="text-sm">
+                <span className="font-medium text-green-600">{importResult.success} URL</span> başarıyla eklendi.
+              </p>
+              {importResult.failed.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium text-destructive">{importResult.failed.length} URL</span> eklenemedi:
+                  </p>
+                  <div className="overflow-y-auto max-h-52 border rounded-md divide-y">
+                    {importResult.failed.map((f) => (
+                      <div key={f.url} className="px-3 py-2">
+                        <p className="text-xs text-muted-foreground truncate">{f.url}</p>
+                        <p className="text-xs text-destructive">{f.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button onClick={handleClose}>Kapat</Button>
+            </DialogFooter>
+          </div>
+        ) : discovered.length === 0 ? (
           <form onSubmit={handleDiscover} className="space-y-4 flex-1">
             <div className="space-y-2">
               <Label htmlFor="crawl-url">{t("crawlRootUrlLabel")}</Label>
@@ -170,7 +223,7 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
                   id="max-pages"
                   type="number"
                   min={1}
-                  max={100}
+                  max={500}
                   value={maxPages}
                   onChange={(e) => setMaxPages(e.target.value)}
                 />
@@ -186,11 +239,18 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
             </DialogFooter>
           </form>
         ) : (
-          <div className="flex flex-col flex-1 min-h-0 gap-4">
+          <div className="flex flex-col flex-1 min-h-0 gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {t("crawlDiscovered", { count: discovered.length })} — {selected.size} seçili
-              </span>
+              <div className="space-y-0.5">
+                <span className="text-sm text-muted-foreground">
+                  {t("crawlDiscovered", { count: discovered.length })} — {selected.size} seçili
+                </span>
+                {limitReached && (
+                  <p className="text-xs text-amber-600">
+                    Sitemap'ta {totalEligible} uygun sayfa var; yalnızca {discovered.length} tanesi keşfedildi. Daha fazlası için sayfa limitini artırın.
+                  </p>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="select-all"
@@ -208,14 +268,23 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
                     id={`url-${item.url}`}
                     checked={selected.has(item.url)}
                     onCheckedChange={(c) => toggleUrl(item.url, c === true)}
-                    className="mt-0.5"
+                    className="mt-1 shrink-0"
                   />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.title}</p>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <input
+                      className="text-sm font-medium w-full bg-transparent border-b border-transparent hover:border-border focus:border-primary outline-none truncate"
+                      value={item.title}
+                      onChange={(e) => updateDiscovered(item.url, { title: e.target.value })}
+                      aria-label="Başlık"
+                    />
                     <p className="text-xs text-muted-foreground truncate">{item.url}</p>
-                    {item.unit && (
-                      <Badge variant="secondary" className="mt-1 text-xs">{item.unit}</Badge>
-                    )}
+                    <input
+                      className="text-xs w-full bg-transparent border-b border-transparent hover:border-border focus:border-primary outline-none text-muted-foreground"
+                      placeholder="Birim (örn: Mühendislik Fakültesi)"
+                      value={item.unit ?? ""}
+                      onChange={(e) => updateDiscovered(item.url, { unit: e.target.value || undefined })}
+                      aria-label="Birim"
+                    />
                   </div>
                 </div>
               ))}
@@ -225,14 +294,11 @@ export function CrawlDialog({ onImported }: CrawlDialogProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => { setDiscovered([]); setSelected(new Set()); }}
+                onClick={() => { setDiscovered([]); setSelected(new Set()); setLimitReached(false); }}
               >
                 Geri
               </Button>
-              <Button
-                onClick={handleImport}
-                disabled={selected.size === 0 || isImporting}
-              >
+              <Button onClick={handleImport} disabled={selected.size === 0 || isImporting}>
                 {isImporting
                   ? t("crawlImporting", { current: importProgress!.current, total: importProgress!.total })
                   : t("crawlImport")}

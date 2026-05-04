@@ -18,7 +18,7 @@ export const ingestUrlSchema = z.object({
 export const crawlInputSchema = z.object({
   rootUrl: z.string().url(),
   maxDepth: z.number().int().min(1).max(5).default(3),
-  maxPages: z.number().int().min(1).max(100).default(50),
+  maxPages: z.number().int().min(1).max(500).default(100),
 });
 
 export const searchKnowledgeInputSchema = z.object({

@@ -1,4 +1,6 @@
 import { parseJsonBody, successResponse, withErrorHandler } from "@/lib/api/server";
+
+export const maxDuration = 300;
 import { ingestDocument } from "@/features/knowledge/lib/mutations";
 import { ingestUrlSchema } from "@/features/knowledge/lib/validators";
 import { parseOrThrow } from "@/lib/validation";

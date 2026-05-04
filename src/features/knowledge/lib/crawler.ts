@@ -53,10 +53,16 @@ interface CrawlOptions {
   maxPages?: number;
 }
 
+export interface CrawlSiteResult {
+  discoveries: CrawlDiscovery[];
+  /** Sitemap modunda limit kesilmeden önceki toplam uygun URL sayısı. */
+  totalEligible: number;
+}
+
 export async function crawlSite(
   rootUrl: string,
   options: CrawlOptions = {}
-): Promise<CrawlDiscovery[]> {
+): Promise<CrawlSiteResult> {
   const { maxDepth = 3, maxPages = 100 } = options;
 
   const rootDomain = new URL(rootUrl).hostname;
@@ -67,20 +73,25 @@ export async function crawlSite(
 
   const sitemapUrls = await trySitemap(rootUrl);
   if (sitemapUrls.length > 0) {
-    logger.info(`[crawl] sitemap found — ${sitemapUrls.length} URLs`);
-    for (const url of sitemapUrls.slice(0, maxPages)) {
-      if (shouldSkip(url, rootDomain)) continue;
-      discoveries.push({ url, depth: 0 });
+    // Filter first so maxPages is applied after removing skip-worthy URLs.
+    const eligible = sitemapUrls.filter((url) => !shouldSkip(url, rootDomain));
+    logger.info(`[crawl] sitemap — ${sitemapUrls.length} total, ${eligible.length} eligible, limit=${maxPages}`);
+
+    for (const url of eligible.slice(0, maxPages)) {
+      const meta = await fetchPageMeta(url);
+      discoveries.push({ url, depth: 0, ...meta });
     }
-    logger.info(`[crawl] sitemap done — ${discoveries.length} indexable URLs`);
-    return discoveries;
+
+    logger.info(`[crawl] sitemap done — ${discoveries.length} pages fetched`);
+    return { discoveries, totalEligible: eligible.length };
   }
 
   logger.info(`[crawl] no sitemap — starting recursive crawl`);
   await crawlPage(rootUrl, 0);
   logger.info(`[crawl] done — ${discoveries.length} pages discovered`);
 
-  return discoveries;
+  // For recursive crawl we can't know the true total without full traversal.
+  return { discoveries, totalEligible: discoveries.length };
 
   async function crawlPage(url: string, depth: number) {
     if (depth > maxDepth) return;
@@ -130,6 +141,20 @@ export async function crawlSite(
     for (const link of links) {
       await crawlPage(link, depth + 1);
     }
+  }
+}
+
+async function fetchPageMeta(url: string): Promise<{ title?: string; snippet?: string }> {
+  try {
+    const response = await fetch(url, { headers: CRAWL_HEADERS, cache: "no-store" });
+    if (!response.ok) return {};
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    const title = $("h1").first().text().trim() || $("title").text().trim();
+    const snippet = $("body").text().replace(/\s+/g, " ").trim().slice(0, 500);
+    return { title: title || undefined, snippet: snippet || undefined };
+  } catch {
+    return {};
   }
 }
 
