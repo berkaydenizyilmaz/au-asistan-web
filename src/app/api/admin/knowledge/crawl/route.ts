@@ -25,7 +25,7 @@ export const POST = withErrorHandler(async (request) => {
 
     let suggestion;
     try {
-      suggestion = await suggestMetadata(d.url, d.title ?? "", "");
+      suggestion = await suggestMetadata(d.url, d.title ?? "", d.snippet ?? "");
     } catch {
       suggestion = { title: d.title ?? d.url, unit: undefined, shouldIndex: true, skipReason: undefined };
     }
