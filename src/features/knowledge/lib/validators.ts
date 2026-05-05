@@ -44,6 +44,11 @@ export const reingestSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const updateDocumentMetadataSchema = z.object({
+  title: z.string().min(1).optional(),
+  unit: z.string().nullable().optional(),
+});
+
 export const updateWatchSettingsSchema = z.object({
   isWatched: z.boolean(),
   checkFrequency: z.enum(["daily", "weekly", "monthly"]).nullable().optional(),

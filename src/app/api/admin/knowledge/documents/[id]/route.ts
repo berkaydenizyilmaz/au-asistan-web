@@ -1,6 +1,6 @@
 import { successResponse, withErrorHandler, parseJsonBody } from "@/lib/api/server";
 import { requireAdmin } from "@/lib/auth/server";
-import { deleteDocument, updateDocumentWatchSettings } from "@/features/knowledge/lib/mutations";
+import { deleteDocument, updateDocumentWatchSettings, updateDocumentMetadata } from "@/features/knowledge/lib/mutations";
 import { getDocumentById } from "@/features/knowledge/lib/queries";
 
 export const GET = withErrorHandler(async (_request, context) => {
@@ -13,7 +13,11 @@ export const GET = withErrorHandler(async (_request, context) => {
 export const PATCH = withErrorHandler(async (request, context) => {
   const { id } = await context.params;
   const body = await parseJsonBody(request);
-  await updateDocumentWatchSettings(id, body);
+  if (typeof body === "object" && body !== null && ("title" in body || "unit" in body)) {
+    await updateDocumentMetadata(id, body);
+  } else {
+    await updateDocumentWatchSettings(id, body);
+  }
   return successResponse(null);
 });
 

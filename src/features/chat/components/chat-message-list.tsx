@@ -5,6 +5,16 @@ import type { UIMessage } from "ai";
 
 import { ChatMessage } from "./chat-message";
 
+const TOOL_LABELS: Record<string, string> = {
+  searchKnowledge: "Bilgi tabanı aranıyor...",
+  getMealByDate: "Yemek listesi çekiliyor...",
+  getMealsByDateRange: "Yemek listesi çekiliyor...",
+  getUpcomingCalendarEvents: "Akademik takvim alınıyor...",
+  getCalendarEventsByYear: "Akademik takvim alınıyor...",
+  getRecentAnnouncements: "Duyurular aranıyor...",
+  getUpcomingEvents: "Etkinlikler aranıyor...",
+};
+
 interface ChatMessageListProps {
   messages: UIMessage[];
   status: "submitted" | "streaming" | "ready" | "error";
@@ -37,6 +47,27 @@ export function ChatMessageList({
       lastMessage?.role === "assistant" &&
       !hasText(lastMessage));
 
+  // In newer AI SDK, tool parts have type `tool-${toolName}` and state "input-streaming" | "input"
+  type RawToolPart = { type: string; state: string };
+  const activeToolPart =
+    status === "streaming" && lastMessage?.role === "assistant"
+      ? (lastMessage.parts as RawToolPart[]).find(
+          (p) =>
+            p.type.startsWith("tool-") &&
+            (p.state === "input-streaming" || p.state === "input-available"),
+        )
+      : undefined;
+  const toolLabel = activeToolPart
+    ? (TOOL_LABELS[activeToolPart.type.slice(5)] ?? "İşleniyor...")
+    : null;
+
+  const isThinking =
+    showLoading &&
+    !toolLabel &&
+    status === "streaming" &&
+    lastMessage?.role === "assistant" &&
+    lastMessage.parts.some((p) => p.type === "reasoning");
+
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -67,11 +98,23 @@ export function ChatMessageList({
               AÜ
             </div>
             <div className="rounded-2xl rounded-bl-md bg-muted px-4 py-3">
-              <div className="flex items-center gap-1">
-                <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:0ms]" />
-                <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:150ms]" />
-                <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:300ms]" />
-              </div>
+              {toolLabel ? (
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-primary" />
+                  <span className="text-sm text-muted-foreground animate-pulse">{toolLabel}</span>
+                </div>
+              ) : isThinking ? (
+                <div className="flex items-center gap-2">
+                  <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-muted-foreground/50" />
+                  <span className="text-sm text-muted-foreground animate-pulse">Düşünüyor...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:0ms]" />
+                  <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:150ms]" />
+                  <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:300ms]" />
+                </div>
+              )}
             </div>
           </div>
         )}

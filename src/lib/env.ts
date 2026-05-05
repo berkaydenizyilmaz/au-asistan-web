@@ -25,4 +25,6 @@ export const env = {
   aiEmbeddingDimensions: Number(
     process.env.AI_EMBEDDING_DIMENSIONS ?? "2560"
   ),
+  // "off" to disable native proxy; otherwise passed as Ollama's think budget
+  aiThinkLevel: process.env.AI_THINK_LEVEL ?? "high",
 } as const;

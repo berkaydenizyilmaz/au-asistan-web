@@ -71,15 +71,17 @@ export async function crawlSite(
     rootUrl = rootParsed.toString();
   }
   const rootDomain = rootParsed.hostname;
+  // If root URL has a specific path, restrict crawl to URLs under that path prefix.
+  const rootPathPrefix = rootParsed.pathname === "/" ? null : rootParsed.pathname;
   const visited = new Set<string>();
   const discoveries: CrawlDiscovery[] = [];
 
-  logger.info(`[crawl] starting — root=${rootUrl} maxDepth=${maxDepth} maxPages=${maxPages}`);
+  logger.info(`[crawl] starting — root=${rootUrl} maxDepth=${maxDepth} maxPages=${maxPages}${rootPathPrefix ? ` prefix=${rootPathPrefix}` : ""}`);
 
   const sitemapUrls = await trySitemap(rootUrl);
   if (sitemapUrls.length > 0) {
     // Filter first so maxPages is applied after removing skip-worthy URLs.
-    const eligible = sitemapUrls.filter((url) => !shouldSkip(url, rootDomain));
+    const eligible = sitemapUrls.filter((url) => !shouldSkip(url, rootDomain, rootPathPrefix));
     logger.info(`[crawl] sitemap — ${sitemapUrls.length} total, ${eligible.length} eligible, limit=${maxPages}`);
 
     for (const url of eligible.slice(0, maxPages)) {
@@ -103,7 +105,7 @@ export async function crawlSite(
     if (depth > maxDepth) return;
     if (visited.size >= maxPages) return;
     if (visited.has(url)) return;
-    if (shouldSkip(url, rootDomain)) return;
+    if (shouldSkip(url, rootDomain, rootPathPrefix)) return;
 
     visited.add(url);
     logger.debug(`[crawl] visiting [${depth}] ${url}`);
@@ -193,12 +195,13 @@ async function trySitemap(rootUrl: string): Promise<string[]> {
   }
 }
 
-function shouldSkip(url: string, allowedDomain: string): boolean {
+function shouldSkip(url: string, allowedDomain: string, pathPrefix: string | null = null): boolean {
   try {
     const parsed = new URL(url);
 
     if (parsed.hostname !== allowedDomain) return true;
     if (EXTERNAL_SKIP_DOMAINS.includes(parsed.hostname)) return true;
+    if (pathPrefix && !parsed.pathname.startsWith(pathPrefix)) return true;
 
     const path = parsed.pathname.toLowerCase();
     if (SKIP_EXTENSIONS.some((ext) => path.endsWith(ext))) return true;

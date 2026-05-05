@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   Table,
@@ -12,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { apiFetch } from "@/lib/api/client";
 
 import type { DocumentDTO } from "../types";
 import { WatchToggle } from "./watch-toggle";
@@ -24,6 +27,12 @@ interface DocumentTableProps {
   selected: Set<string>;
   onToggle: (id: string) => void;
   onToggleAll: (checked: boolean) => void;
+}
+
+interface EditingCell {
+  id: string;
+  field: "title" | "unit";
+  value: string;
 }
 
 function formatDate(iso: string | null): string {
@@ -39,6 +48,34 @@ export function DocumentTable({ documents, onRefresh, selected, onToggle, onTogg
   const t = useTranslations("admin.rag");
   const allSelected = documents.length > 0 && selected.size === documents.length;
   const someSelected = selected.size > 0 && !allSelected;
+  const [editing, setEditing] = useState<EditingCell | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  function startEdit(doc: DocumentDTO, field: "title" | "unit") {
+    setEditing({ id: doc.id, field, value: field === "title" ? doc.title : (doc.unit ?? "") });
+  }
+
+  async function commitEdit() {
+    if (!editing || saving) return;
+    setSaving(true);
+    try {
+      await apiFetch(`/api/admin/knowledge/documents/${editing.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ [editing.field]: editing.value || null }),
+      });
+      onRefresh();
+    } catch {
+      toast.error("Güncelleme başarısız.");
+    } finally {
+      setSaving(false);
+      setEditing(null);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") commitEdit();
+    if (e.key === "Escape") setEditing(null);
+  }
 
   if (documents.length === 0) {
     return (
@@ -81,7 +118,25 @@ export function DocumentTable({ documents, onRefresh, selected, onToggle, onTogg
               </TableCell>
               <TableCell className="font-medium">
                 <div className="max-w-[280px]">
-                  <p className="truncate text-sm">{doc.title}</p>
+                  {editing?.id === doc.id && editing.field === "title" ? (
+                    <input
+                      autoFocus
+                      className="w-full text-sm bg-transparent border-b border-primary outline-none"
+                      value={editing.value}
+                      onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+                      onBlur={commitEdit}
+                      onKeyDown={handleKeyDown}
+                      disabled={saving}
+                    />
+                  ) : (
+                    <p
+                      className="truncate text-sm cursor-pointer hover:text-primary"
+                      title="Düzenlemek için tıkla"
+                      onClick={() => startEdit(doc, "title")}
+                    >
+                      {doc.title}
+                    </p>
+                  )}
                   <a
                     href={doc.sourceUrl}
                     target="_blank"
@@ -94,7 +149,26 @@ export function DocumentTable({ documents, onRefresh, selected, onToggle, onTogg
               </TableCell>
               <TableCell className="text-sm">{doc.domain}</TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {doc.unit ?? t("noUnit")}
+                {editing?.id === doc.id && editing.field === "unit" ? (
+                  <input
+                    autoFocus
+                    className="w-full text-sm bg-transparent border-b border-primary outline-none"
+                    value={editing.value}
+                    placeholder="Birim yok"
+                    onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+                    onBlur={commitEdit}
+                    onKeyDown={handleKeyDown}
+                    disabled={saving}
+                  />
+                ) : (
+                  <span
+                    className="cursor-pointer hover:text-primary"
+                    title="Düzenlemek için tıkla"
+                    onClick={() => startEdit(doc, "unit")}
+                  >
+                    {doc.unit ?? <span className="italic opacity-50">{t("noUnit")}</span>}
+                  </span>
+                )}
               </TableCell>
               <TableCell>
                 <Badge variant={doc.sourceType === "pdf" ? "secondary" : "outline"} className="text-xs">

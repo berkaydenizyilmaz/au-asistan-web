@@ -28,8 +28,8 @@ export const knowledgeTools = {
         .min(1)
         .max(10)
         .optional()
-        .default(5)
-        .describe("Döndürülecek maksimum sonuç sayısı. Varsayılan 5."),
+        .default(8)
+        .describe("Döndürülecek maksimum sonuç sayısı. Varsayılan 8. Kapsamlı sorgular için 10 kullan."),
     }),
     execute: async ({ query, unit, limit }) => {
       try {

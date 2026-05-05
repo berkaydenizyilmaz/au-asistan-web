@@ -7,7 +7,7 @@ import { documents, documentChunks } from "@/lib/db/schema/documents";
 import { requireAdmin } from "@/lib/auth/server";
 import { uuidString, parseOrThrow } from "@/lib/validation";
 import { NotFoundError, ConflictError } from "@/lib/errors";
-import { updateWatchSettingsSchema, bulkCreateDocumentsSchema } from "./validators";
+import { updateWatchSettingsSchema, bulkCreateDocumentsSchema, updateDocumentMetadataSchema } from "./validators";
 
 import { scrapeUrl } from "./scraper";
 import { chunkContent } from "./chunker";
@@ -176,6 +176,26 @@ export async function deleteDocument(id: string): Promise<void> {
 
   const result = await db.admin
     .delete(documents)
+    .where(eq(documents.id, id))
+    .returning({ id: documents.id });
+
+  if (!result[0]) throw new NotFoundError("Döküman bulunamadı");
+}
+
+export async function updateDocumentMetadata(id: string, params: unknown): Promise<void> {
+  await requireAdmin();
+  parseOrThrow(uuidString, id, "Invalid document ID");
+  const data = parseOrThrow(updateDocumentMetadataSchema, params, "Invalid metadata");
+
+  const db = await createDrizzleSupabaseClient();
+
+  const result = await db.admin
+    .update(documents)
+    .set({
+      ...(data.title !== undefined && { title: data.title }),
+      ...(data.unit !== undefined && { unit: data.unit }),
+      updatedAt: new Date(),
+    })
     .where(eq(documents.id, id))
     .returning({ id: documents.id });
 

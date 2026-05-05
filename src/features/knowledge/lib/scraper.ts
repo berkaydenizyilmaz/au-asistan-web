@@ -14,6 +14,20 @@ const SCRAPE_HEADERS = {
   Accept: "text/html,application/pdf,*/*",
 };
 
+// JS framework imzaları — bu string'ler varsa sayfa büyük ihtimalle SPA
+const JS_FRAMEWORK_SIGNATURES = [
+  "__NEXT_DATA__",
+  "data-reactroot",
+  "ng-version",
+  "window.__nuxt__",
+  "data-vue-app",
+  "__SVELTE__",
+  "ember-application",
+];
+
+// data-* attribute'larından metin çıkarılacak attribute adları
+const DATA_TEXT_ATTRS = ["data-info", "data-value", "data-text", "data-label", "data-title"];
+
 const PRIVATE_IP_PATTERNS = [
   /^127\./,
   /^10\./,
@@ -85,6 +99,9 @@ async function scrapeHtml(
     throw new AppError({ code: "SCRAPE_PARSE_FAILED", message: "HTML okunamadı", statusCode: 500 });
   }
 
+  // Ham HTML'de JS framework imzası ara (script tag'leri kaldırılmadan önce)
+  const isJsRendered = JS_FRAMEWORK_SIGNATURES.some((sig) => html.includes(sig));
+
   const $ = cheerio.load(html);
 
   $(
@@ -108,10 +125,35 @@ async function scrapeHtml(
           ? $(".content, #content, .main-content").first()
           : $("body");
 
-  const text = contentEl
-    .text()
-    .replace(/\s+/g, " ")
-    .trim();
+  const bodyText = contentEl.text().replace(/\s+/g, " ").trim();
+
+  // Metin olmayan attribute'lardan veri çek (SVG data-info vb.)
+  const attrParts: string[] = [];
+  DATA_TEXT_ATTRS.forEach((attr) => {
+    contentEl.find(`[${attr}]`).each((_, el) => {
+      const val = $(el).attr(attr)?.trim();
+      if (val) attrParts.push(val);
+    });
+  });
+
+  const text = [bodyText, ...attrParts].filter(Boolean).join("\n").replace(/\s+/g, " ").trim();
+
+  // JS-render tespiti: framework imzası varsa ve yeterli metin çıkmadıysa
+  // veya imza yoksa ama HTML büyük olmasına rağmen metin çok azsa (bilinmeyen SPA)
+  if (isJsRendered && text.length < 500) {
+    throw new AppError({
+      code: "SCRAPE_JS_REQUIRED",
+      message: "Sayfa içeriği JavaScript ile yükleniyor, statik çekim desteklenmiyor",
+      statusCode: 422,
+    });
+  }
+  if (!isJsRendered && text.length < 200 && html.length > 10_000) {
+    throw new AppError({
+      code: "SCRAPE_JS_REQUIRED",
+      message: "Sayfa yeterli metin içermiyor; JavaScript ile render ediliyor olabilir",
+      statusCode: 422,
+    });
+  }
 
   if (!text) {
     throw new AppError({ code: "SCRAPE_PARSE_FAILED", message: "Sayfa içeriği boş", statusCode: 500 });
@@ -140,12 +182,21 @@ async function scrapePdf(
 
   try {
     const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
+    const numPages = pdf.numPages;
     const { text } = await extractText(pdf, { mergePages: true });
 
     const title = url.split("/").pop()?.replace(".pdf", "") ?? "Belge";
     const cleanText = text.replace(/\s+/g, " ").trim();
 
     if (!cleanText) {
+      // Sayfa sayısı varsa ama metin yoksa → taranmış (görüntü tabanlı) PDF
+      if (numPages > 0) {
+        throw new AppError({
+          code: "SCRAPE_SCANNED_PDF",
+          message: `PDF taranmış görünüyor (${numPages} sayfa tespit edildi, metin katmanı bulunamadı). OCR gerekiyor.`,
+          statusCode: 422,
+        });
+      }
       throw new AppError({ code: "SCRAPE_PARSE_FAILED", message: "PDF içeriği boş", statusCode: 500 });
     }
 
