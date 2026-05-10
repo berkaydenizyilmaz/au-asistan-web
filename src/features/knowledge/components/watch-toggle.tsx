@@ -60,7 +60,7 @@ export function WatchToggle({
   }
 
   return (
-    <div className="space-y-3 min-w-[180px]">
+    <div className="space-y-3 min-w-45">
       <div className="flex items-center gap-2">
         <Switch
           checked={isWatched}

@@ -245,7 +245,15 @@ const nativeFetch: typeof globalThis.fetch = async (input, init) => {
       messages: unknown[];
       temperature?: number;
       tools?: unknown[];
+      stream?: boolean;
     };
+
+    // Only intercept streaming chat requests. Non-streaming calls (generateObject,
+    // doGenerate) must pass through to the OpenAI-compat endpoint as-is — the
+    // native API always streams, which breaks JSON response parsing.
+    if (body.stream !== true) {
+      return globalThis.fetch(input, init);
+    }
 
     const ollamaBody: Record<string, unknown> = {
       model: body.model,

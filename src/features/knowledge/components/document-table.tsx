@@ -97,7 +97,7 @@ export function DocumentTable({ documents, onRefresh, selected, onToggle, onTogg
                 aria-label="Tümünü seç"
               />
             </TableHead>
-            <TableHead className="min-w-[200px]">{t("tableTitle")}</TableHead>
+            <TableHead className="min-w-50">{t("tableTitle")}</TableHead>
             <TableHead>{t("tableDomain")}</TableHead>
             <TableHead>{t("tableUnit")}</TableHead>
             <TableHead>{t("tableType")}</TableHead>
@@ -117,7 +117,7 @@ export function DocumentTable({ documents, onRefresh, selected, onToggle, onTogg
                 />
               </TableCell>
               <TableCell className="font-medium">
-                <div className="max-w-[280px]">
+                <div className="max-w-70">
                   {editing?.id === doc.id && editing.field === "title" ? (
                     <input
                       autoFocus

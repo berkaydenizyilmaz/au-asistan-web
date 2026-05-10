@@ -50,7 +50,7 @@ function ExpandableText({ text, label }: { text: string; label: string }) {
   const isLong = text.length > 120;
 
   return (
-    <div className="max-w-[260px]">
+    <div className="max-w-65">
       <p
         className={
           expanded ? "text-sm whitespace-pre-wrap" : "text-sm line-clamp-2"
@@ -186,12 +186,12 @@ export function FeedbackTableClient({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">{t("tableRating")}</TableHead>
+                  <TableHead className="w-25">{t("tableRating")}</TableHead>
                   <TableHead>{t("tableQuestion")}</TableHead>
                   <TableHead>{t("tableAnswer")}</TableHead>
-                  <TableHead className="w-[110px]">{t("tableFallback")}</TableHead>
-                  <TableHead className="w-[100px]">{t("tableResponseTime")}</TableHead>
-                  <TableHead className="w-[140px]">{t("tableDate")}</TableHead>
+                  <TableHead className="w-27.5">{t("tableFallback")}</TableHead>
+                  <TableHead className="w-25">{t("tableResponseTime")}</TableHead>
+                  <TableHead className="w-35">{t("tableDate")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

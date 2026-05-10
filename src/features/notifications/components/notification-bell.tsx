@@ -83,7 +83,7 @@ export function NotificationBell() {
           )}
         </div>
 
-        <div className="max-h-[360px] overflow-y-auto">
+        <div className="max-h-90 overflow-y-auto">
           {!bellLoaded ? (
             <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
               Yükleniyor...

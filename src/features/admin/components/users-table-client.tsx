@@ -163,9 +163,9 @@ export function UsersTableClient({
                 <TableRow>
                   <TableHead>{t("tableName")}</TableHead>
                   <TableHead>{t("tableEmail")}</TableHead>
-                  <TableHead className="w-[140px]">{t("tableRole")}</TableHead>
-                  <TableHead className="w-[120px]">{t("tableCreated")}</TableHead>
-                  <TableHead className="w-[120px]">{t("tableActions")}</TableHead>
+                  <TableHead className="w-35">{t("tableRole")}</TableHead>
+                  <TableHead className="w-30">{t("tableCreated")}</TableHead>
+                  <TableHead className="w-30">{t("tableActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -188,7 +188,7 @@ export function UsersTableClient({
                             onValueChange={(val) => handleRoleChange(user.id, val)}
                             disabled={loadingRoleFor === user.id}
                           >
-                            <SelectTrigger className="h-7 text-xs w-[110px]">
+                            <SelectTrigger className="h-7 text-xs w-27.5">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

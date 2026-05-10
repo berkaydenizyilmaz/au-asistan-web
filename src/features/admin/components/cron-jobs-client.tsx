@@ -190,11 +190,11 @@ function JobCard({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[90px] text-xs">{t("statusHeader")}</TableHead>
+                    <TableHead className="w-22.5 text-xs">{t("statusHeader")}</TableHead>
                     <TableHead className="text-xs">{t("lastRun")}</TableHead>
-                    <TableHead className="w-[80px] text-xs">{t("durationMs")}</TableHead>
-                    <TableHead className="w-[80px] text-xs">{t("resultCount")}</TableHead>
-                    <TableHead className="w-[70px] text-xs">{t("triggeredBy")}</TableHead>
+                    <TableHead className="w-20 text-xs">{t("durationMs")}</TableHead>
+                    <TableHead className="w-20 text-xs">{t("resultCount")}</TableHead>
+                    <TableHead className="w-17.5 text-xs">{t("triggeredBy")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
